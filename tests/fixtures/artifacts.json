@@ -1,0 +1,7 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    { "id": 9001, "name": "report-merchant-102-418-1", "expired": false, "created_at": "2026-10-12T03:35:52Z", "size_in_bytes": 388622 },
+    { "id": 9003, "name": "report-onboard-102-418-1", "expired": true, "created_at": "2026-10-12T03:36:43Z", "size_in_bytes": 256098 }
+  ]
+}

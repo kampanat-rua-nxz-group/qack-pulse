@@ -1,0 +1,38 @@
+{
+  "owner": "nxz-group",
+  "branch": "main",
+  "staleAfterDays": 5,
+  "roseAtPassRate": 0.8,
+  "mode": "artifacts",
+  "products": [
+    {
+      "name": "Lockbox",
+      "repos": [
+        {
+          "name": "lockbox-api-automation",
+          "modules": [
+            { "name": "merchant-api", "workflow": "regression.yaml", "artifactPrefix": "report-merchant-" },
+            { "name": "onboard-api", "workflow": "regression.yaml", "artifactPrefix": "report-onboard-" },
+            { "name": "chain-connector", "workflow": "regression.yaml", "artifactPrefix": "report-chain-connector-" },
+            { "name": "e2e", "workflow": "e2e.yaml", "artifactPrefix": "playwright-report-", "events": ["schedule"], "staleAfterDays": 8 }
+          ]
+        },
+        {
+          "name": "lockbox-bo-api-automation",
+          "modules": [
+            { "name": "authentication-api", "workflow": "authentication-api-regression.yaml", "artifactPrefix": "playwright-report-" },
+            { "name": "backoffice-api", "workflow": "backoffice-api-regression.yaml", "artifactPrefix": "playwright-report-" },
+            { "name": "report-api", "workflow": "report-api-regression.yaml", "artifactPrefix": "playwright-report-" },
+            { "name": "internal-api", "workflow": "internal-api-regression.yaml", "artifactPrefix": "playwright-report-" }
+          ]
+        },
+        {
+          "name": "lockbox-ui-automation",
+          "modules": [
+            { "name": "backoffice-ui", "workflow": "regression-tests.yml", "artifactPrefix": "playwright-report-" }
+          ]
+        }
+      ]
+    }
+  ]
+}

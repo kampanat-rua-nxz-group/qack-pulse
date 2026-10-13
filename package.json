@@ -1,0 +1,13 @@
+{
+  "name": "qack-pulse",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "dashboard": "node src/cli.ts",
+    "backfill": "node src/backfill.ts",
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-coverage-lines=80 \"tests/**/*.test.ts\""
+  }
+}
