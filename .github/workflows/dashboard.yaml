@@ -46,9 +46,13 @@ jobs:
           path: data/history.jsonl
           key: history-${{ github.run_id }}
 
-      # Only the encrypted page goes to Pages. dashboard.json stays out of site/.
-      - name: Lock page with passcode
-        run: node src/lock.ts out/dashboard.html site/index.html
+      # Only encrypted pages go to Pages. dashboard.json stays out of site/.
+      # dashboard.html is the same page as index.html, so the history page's back link resolves.
+      - name: Lock pages with passcode
+        run: |
+          node src/lock.ts out/dashboard.html site/index.html
+          cp site/index.html site/dashboard.html
+          node src/lock.ts out/history.html site/history.html
         env:
           PULSE_PASSCODE: ${{ secrets.PULSE_PASSCODE }}
 

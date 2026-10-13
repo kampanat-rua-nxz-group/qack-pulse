@@ -37,6 +37,9 @@ form.addEventListener('submit', async (event) => {
     document.open();
     document.write(html);
     document.close();
+    // document.write drops the scroll to the #anchor in the URL, so jump to it again.
+    const target = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+    if (target !== null) target.scrollIntoView();
   } catch {
     message.className = 'error';
     message.textContent = 'Wrong passcode.';
