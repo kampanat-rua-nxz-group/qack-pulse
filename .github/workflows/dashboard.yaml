@@ -1,0 +1,58 @@
+name: dashboard
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # 04:00 UTC = 11:00 Asia/Bangkok daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: dashboard
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # Newest cache wins. Each run saves under its own key, so the file keeps growing.
+      - name: Restore history
+        uses: actions/cache/restore@v4
+        with:
+          path: data/history.jsonl
+          key: history-${{ github.run_id }}
+          restore-keys: history-
+
+      - name: Build dashboard
+        run: npm run dashboard -- --no-open
+        env:
+          GH_TOKEN: ${{ secrets.QACK_PULSE_TOKEN }}
+
+      - name: Save history
+        uses: actions/cache/save@v4
+        with:
+          path: data/history.jsonl
+          key: history-${{ github.run_id }}
+
+      - name: Add index page
+        run: cp out/dashboard.html out/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4
