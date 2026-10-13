@@ -42,6 +42,16 @@ test('writes the dashboard page and reports where it is', async () => {
   assert.match(output.stdout, /Wrote .*dashboard\.html/);
 });
 
+test('writes history.html beside the dashboard and links the table to it', async () => {
+  const { dir, deps, output } = workspace();
+  assert.equal(await run([], deps), 0);
+  const history = readFileSync(join(dir, 'out', 'history.html'), 'utf8');
+  assert.match(history, /<h2>merchant-api <span class="sub">/);
+  assert.match(history, /<li class="day /);
+  assert.match(readFileSync(join(dir, 'out', 'dashboard.html'), 'utf8'), /href="history\.html#m-0-0-0"/);
+  assert.match(output.stdout, /Wrote .*history\.html/);
+});
+
 test('writes dashboard.json with the same rolled-up data', async () => {
   const { dir, deps, output } = workspace();
   await run([], deps);
