@@ -46,12 +46,15 @@ jobs:
           path: data/history.jsonl
           key: history-${{ github.run_id }}
 
-      - name: Add index page
-        run: cp out/dashboard.html out/index.html
+      # Only the encrypted page goes to Pages. dashboard.json stays out of site/.
+      - name: Lock page with passcode
+        run: node src/lock.ts out/dashboard.html site/index.html
+        env:
+          PULSE_PASSCODE: ${{ secrets.PULSE_PASSCODE }}
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: out
+          path: site
 
       - name: Deploy
         id: deploy
