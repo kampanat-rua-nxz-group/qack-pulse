@@ -108,7 +108,7 @@ test('shows why a module has no data, with the date and link of its last run', (
 
 test('shows a module without any run as no data with no date and no link', () => {
   const html = render(dashboard({ ...noDataModule, reason: 'no-run', runDate: null, stale: false, runUrl: null }), 0.8);
-  assert.match(html, /No data: no finished run on the branch<\/td><td><\/td><td><\/td><td><\/td><\/tr>/);
+  assert.match(html, /No data: no finished run on the branch<\/td><td><\/td><td><\/td><td class="history"><\/td><\/tr>/);
 });
 
 test('escapes names that come from the config', () => {
@@ -146,7 +146,7 @@ test('shows a run-failed module as rose with its detail, date, age, and link', (
   assert.match(html, /tr\.run-failed \{ --health: var\(--color-form-error\); \}/);
   assert.match(html, /<tr class="module run-failed"><td class="name">onboard-api<\/td>/);
   assert.match(html, /Run failed, no results <span class="sub">\(the report has no stats\)<\/span><\/td>/);
-  assert.match(html, /2026-10-12 10:33 <span class="sub">today<\/span><\/td><td><a href=/);
+  assert.match(html, /2026-10-12 10:33 <span class="sub">today<\/span><\/td><td class="history"><a href=/);
 });
 
 test('turns a repo and product rose and badges the failed modules, even with a high pass rate', () => {
@@ -313,4 +313,25 @@ test('shows 0.0% on a zero counter and no share when there are no cases', () => 
   assert.match(counter(html, 'failed zero'), /<span class="pct">0\.0%<\/span><\/li>$/);
   const none = { total: 0, passed: 0, failed: 0, skipped: 0, flaky: 0 };
   assert.doesNotMatch(render(dashboard(okModule, { ...summary, counts: none }), 0.8), /class="pct"/);
+});
+
+test('links each module row to its card on the history page when a trend is given', () => {
+  const html = render(dashboard(), 0.8, trendFor(trendOf('worse', -0.021)));
+  assert.match(html, /<th>History<\/th>/);
+  assert.doesNotMatch(html, /<th>Run<\/th>/);
+  assert.match(html, /<td class="history"><a href="history\.html#m-0-0-0">history<\/a><\/td><\/tr>/);
+  assert.doesNotMatch(html, />run<\/a>/);
+});
+
+test('links no-data and run-failed modules to the history page too, and only module rows', () => {
+  assert.match(render(dashboard(noDataModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="history\.html#m-0-0-0">history<\/a><\/td>/);
+  assert.match(render(dashboard(runFailedModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="history\.html#m-0-0-0">history<\/a><\/td>/);
+  assert.equal(render(dashboard(), 0.8, trendFor(trendOf('flat', 0))).match(/class="history"/g)?.length, 1);
+});
+
+test('keeps the Run column and its link when no trend is given', () => {
+  const html = render(dashboard(), 0.8);
+  assert.match(html, /<th>Run<\/th>/);
+  assert.doesNotMatch(html, /history\.html/);
+  assert.match(html, /<td class="history"><a href="https:\/\/github\.com\/[^"]*">run<\/a><\/td>/);
 });

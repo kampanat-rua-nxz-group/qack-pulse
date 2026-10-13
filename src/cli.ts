@@ -6,6 +6,7 @@ import { loadConfig } from './config.ts';
 import { checkGh, createGh } from './gh.ts';
 import { appendHistory, readHistory } from './history.ts';
 import type { Gh } from './gh.ts';
+import { renderHistory } from './history-page.ts';
 import { render } from './render.ts';
 import { rollup } from './rollup.ts';
 import { buildTrend } from './trend.ts';
@@ -34,13 +35,16 @@ export async function run(argv: string[], deps: Deps): Promise<number> {
     const collected = await collect(config, deps.createGh(config.branch), now, warn);
     const dashboard = rollup(collected, now);
     await appendHistory(deps.historyPath, collected);
-    const trend = buildTrend(await readHistory(deps.historyPath), dashboard, now);
+    const history = await readHistory(deps.historyPath);
+    const trend = buildTrend(history, dashboard, now);
     await mkdir(deps.outDir, { recursive: true });
     const htmlPath = join(deps.outDir, 'dashboard.html');
     const jsonPath = join(deps.outDir, 'dashboard.json');
     await writeFile(htmlPath, render(dashboard, config.roseAtPassRate, trend));
     await writeFile(jsonPath, `${JSON.stringify({ ...dashboard, trend }, null, 2)}\n`);
-    deps.stdout(`Wrote ${htmlPath}\nWrote ${jsonPath}\n`);
+    const historyPagePath = join(deps.outDir, 'history.html');
+    await writeFile(historyPagePath, renderHistory(dashboard, history, now, config.roseAtPassRate));
+    deps.stdout(`Wrote ${htmlPath}\nWrote ${jsonPath}\nWrote ${historyPagePath}\n`);
     if (!argv.includes('--no-open')) {
       // The files are already written, so a browser that will not open is only a warning.
       await deps.open(htmlPath).catch((error) => warn(`could not open the browser: ${messageOf(error)}`));

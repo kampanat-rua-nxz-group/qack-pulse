@@ -1,5 +1,6 @@
 import type { NoDataReason, RunFailedDetail } from './collect.ts';
 import type { Dashboard, ModuleRow, Summary } from './rollup.ts';
+import { historyId } from './history-page.ts';
 import { ICONS } from './icons.ts';
 import type { Counts } from './stats.ts';
 import { STYLE } from './style.ts';
@@ -65,8 +66,17 @@ const lastRun = (iso: string | null, stale: boolean, now: string): string => {
 };
 
 // Only GitHub https links become anchors. Anything else is dropped.
-const runLink = (url: string | null): string =>
-  url !== null && /^https:\/\/github\.com\//.test(url) ? `<a href="${escapeHtml(url)}">run</a>` : '';
+export const safeUrl = (url: string | null): string | null => (url !== null && /^https:\/\/github\.com\//.test(url) ? url : null);
+
+const runLink = (url: string | null): string => {
+  const href = safeUrl(url);
+  return href === null ? '' : `<a href="${escapeHtml(href)}">run</a>`;
+};
+
+// With a trend the cell points at the module's card on the history page, which carries the run link.
+// Without one there is no history page, so the cell keeps the plain run link.
+const historyCell = (url: string | null, id: string | null): string =>
+  `<td class="history">${id === null ? runLink(url) : `<a href="history.html#${id}">history</a>`}</td>`;
 
 // The row carries only the pass rate. CSS turns it into the health color.
 // A failed run overrides the scale because its counts are unknown.
@@ -94,15 +104,15 @@ const summaryRow = (kind: string, name: string, summary: Summary, id: string): s
   return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<td class="name">${escapeHtml(name)} <span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}${fold(id, name)}</td>${healthCells(rate)}${counts}<td></td><td></td><td></td></tr>`;
 };
 
-function moduleRow(mod: ModuleRow, now: string): string {
+function moduleRow(mod: ModuleRow, now: string, historyId: string | null): string {
   const name = `<td class="name">${escapeHtml(mod.name)}`;
   if (mod.status === 'no-data') {
-    return `${rowOpen('module no-data', null)}${name}</td>${healthCells(null)}<td colspan="5" class="reason">No data: ${REASONS[mod.reason]}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td><td>${runLink(mod.runUrl)}</td></tr>`;
+    return `${rowOpen('module no-data', null)}${name}</td>${healthCells(null)}<td colspan="5" class="reason">No data: ${REASONS[mod.reason]}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId)}</tr>`;
   }
   if (mod.status === 'run-failed') {
-    return `${rowOpen('module', null, true)}${name}</td>${healthCells(null)}<td colspan="5" class="failed-text">Run failed, no results <span class="sub">(${DETAILS[mod.reason]})</span></td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td><td>${runLink(mod.runUrl)}</td></tr>`;
+    return `${rowOpen('module', null, true)}${name}</td>${healthCells(null)}<td colspan="5" class="failed-text">Run failed, no results <span class="sub">(${DETAILS[mod.reason]})</span></td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId)}</tr>`;
   }
-  return `${rowOpen('module', mod.passRate)}${name}</td>${healthCells(mod.passRate)}${countCells(mod.counts)}<td class="num">${formatDuration(mod.durationMs)}</td><td>${lastRun(mod.startTime, mod.stale, now)}</td><td>${runLink(mod.runUrl)}</td></tr>`;
+  return `${rowOpen('module', mod.passRate)}${name}</td>${healthCells(mod.passRate)}${countCells(mod.counts)}<td class="num">${formatDuration(mod.durationMs)}</td><td>${lastRun(mod.startTime, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId)}</tr>`;
 }
 
 type CounterKind = keyof typeof ICONS;
@@ -147,11 +157,11 @@ export function render(dashboard: Dashboard, roseAtPassRate: number, trend: Dash
     `<tbody class="head">\n${summaryRow('product', product.name, product, `p${p}`)}\n</tbody>`,
     ...product.repos.map((repo, r) => {
       const id = `r${firstRepo[p] + r}`;
-      const modules = repo.modules.map((mod) => moduleRow(mod, dashboard.generatedAt));
+      const modules = repo.modules.map((mod, m) => moduleRow(mod, dashboard.generatedAt, trend === null ? null : historyId(p, r, m)));
       return `<tbody class="in-p${p} in-${id}">\n${[summaryRow('repo', repo.name, repo, id), ...modules].join('\n')}\n</tbody>`;
     }),
   ]);
-  const trendNote = trend === null ? '' : ` Cards above the table plot the pass rate per day over the last ${trend.days} days.`;
+  const trendNote = trend === null ? '' : ` Cards above the table plot the pass rate per day over the last ${trend.days} days. The History column links each module to its trend on the history page.`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -173,7 +183,7 @@ ${counters(dashboard.products)}
 ${trend === null ? '' : trendCards(dashboard, trend, roseAtPassRate)}
 <div class="card">
 <table style="--rose-at:${roseAtPassRate}">
-<thead><tr><th class="name">Name</th><th>Health</th><th class="num">Total</th><th class="num">Passed</th><th class="num">Failed</th><th class="num">Skipped</th><th class="num">Flaky</th><th class="num">Duration</th><th>Last run (UTC+7)</th><th>Run</th></tr></thead>
+<thead><tr><th class="name">Name</th><th>Health</th><th class="num">Total</th><th class="num">Passed</th><th class="num">Failed</th><th class="num">Skipped</th><th class="num">Flaky</th><th class="num">Duration</th><th>Last run (UTC+7)</th><th>${trend === null ? 'Run' : 'History'}</th></tr></thead>
 ${groups.join('\n')}
 </table>
 </div>

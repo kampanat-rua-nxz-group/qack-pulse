@@ -18,8 +18,8 @@ export type DashboardTrend = {
 
 type Series = (Counts | null)[];
 type DayCounts = Map<string, Counts>;
-type Parsed = { module: string; run: string; startTime: string; counts: Counts };
-type RunTotal = { module: string; startTime: string; counts: Counts };
+type Parsed = { module: string; run: string; startTime: string; counts: Counts; runUrl: string | null };
+export type RunTotal = { module: string; startTime: string; counts: Counts; runUrl: string | null };
 
 const isCount = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0;
 
@@ -42,11 +42,13 @@ function parseRow(row: HistoryLine): Parsed | null {
     run: `${runId}|${attempt}`,
     startTime: new Date(startTime).toISOString(),
     counts: { total: passed + failed + skipped + flaky, passed, failed, skipped, flaky },
+    runUrl: typeof row.runUrl === 'string' ? row.runUrl : null,
   };
 }
 
 // Shards of one run add up. A run counts on the UTC day it started. The newest run of a day wins.
-function lastRunPerDay(rows: HistoryLine[]): Map<string, DayCounts> {
+// Keyed by "repo|module", then by UTC date.
+export function newestRunPerDay(rows: HistoryLine[]): Map<string, Map<string, RunTotal>> {
   const runs = new Map<string, RunTotal>();
   for (const row of rows) {
     const parsed = parseRow(row);
@@ -57,6 +59,7 @@ function lastRunPerDay(rows: HistoryLine[]): Map<string, DayCounts> {
       module: parsed.module,
       startTime: prior === undefined || parsed.startTime < prior.startTime ? parsed.startTime : prior.startTime,
       counts: prior === undefined ? parsed.counts : addCounts(prior.counts, parsed.counts),
+      runUrl: prior?.runUrl ?? parsed.runUrl,
     });
   }
   const newest = new Map<string, Map<string, RunTotal>>();
@@ -67,8 +70,12 @@ function lastRunPerDay(rows: HistoryLine[]): Map<string, DayCounts> {
     if (current === undefined || current.startTime < run.startTime) days.set(date, run);
     newest.set(run.module, days);
   }
+  return newest;
+}
+
+function lastRunPerDay(rows: HistoryLine[]): Map<string, DayCounts> {
   return new Map(
-    [...newest].map(([module, days]) => [module, new Map([...days].map(([date, run]) => [date, run.counts] as const))] as const),
+    [...newestRunPerDay(rows)].map(([module, days]) => [module, new Map([...days].map(([date, run]) => [date, run.counts] as const))] as const),
   );
 }
 

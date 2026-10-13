@@ -31,6 +31,7 @@ Read this first. The design spec and the implementation plan live in the Obsidia
 │   ├── trend.ts            turn history.jsonl into 14-day pass rate series and a delta
 │   ├── spark.ts            draw a series as an inline SVG sparkline
 │   ├── render.ts           turn the rolled-up data into HTML
+│   ├── history-page.ts     build out/history.html, a month calendar per workflow job
 │   └── cli.ts              wire the parts, write the files, open the browser
 ├── tests/                  one test file per source file, plus fixtures
 └── out/                    generated files, ignored by git
