@@ -33,6 +33,16 @@ test('page has a password form and asks search engines to skip it', () => {
   assert.match(page, /noindex/);
 });
 
+test('page is a login card styled with the QACK design tokens', () => {
+  const page = lockPage(HTML, PASSCODE, FAST);
+  assert.match(page, /<h1>Sign in<\/h1>/);
+  assert.match(page, /<label for="passcode">Passcode<\/label>/);
+  assert.match(page, /--color-brand-primary: #2dd4bf/);
+  assert.match(page, /--color-canvas: #09101a/);
+  assert.match(page, /class="card"/);
+  assert.match(page, /id="message" role="status"/);
+});
+
 test('the browser decrypt function restores the original page', async () => {
   const payload = payloadOf(lockPage(HTML, PASSCODE, FAST));
   assert.equal(await browserDecrypt()(payload, PASSCODE), HTML);
