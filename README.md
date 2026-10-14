@@ -132,6 +132,8 @@ Open a PR with the config change. The workflow runs on push to `main`, daily at 
 
 CI encrypts `dashboard.html` and `history.html` with the `PULSE_PASSCODE` secret (at least 16 characters) and deploys them to GitHub Pages. `dashboard.json` is not published.
 
+After a successful unlock, the passcode is stored in the tab's `sessionStorage` so the dashboard and history page unlock automatically during that session, including on refresh. Closing the tab normally ends the session; browser session restore may preserve it. A changed passcode clears the saved value and requires a new unlock. If browser storage is blocked, each page requires manual unlock.
+
 ## Code layout and conventions
 
 See `AGENTS.md` for the file map and the rules for changing code.

@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { setTimeout as delay } from 'node:timers/promises';
 import { DECRYPT_SOURCE, MIN_PASSCODE_LENGTH, lockFile, lockPage } from '../src/lock.ts';
 
 const PASSCODE = 'correct-horse-battery-staple';
@@ -18,6 +19,109 @@ const payloadOf = (page: string) => {
 // The same function the browser runs, evaluated in Node.
 const browserDecrypt = (): ((payload: unknown, passcode: string) => Promise<string>) =>
   new Function(`${DECRYPT_SOURCE}\nreturn decryptPayload;`)();
+
+// Execute the generated browser script with real crypto and a minimal DOM boundary.
+function openLockedPage(page: string, storage: Map<string, string>, blocked = false, hash = '') {
+  let submit: (event: { preventDefault(): void }) => Promise<void>;
+  let rendered = '';
+  let scrolled = false;
+  const input = { value: '', removeAttribute() {}, setAttribute() {}, focus() {} };
+  const message = { textContent: '', className: '' };
+  const document = {
+    getElementById(id: string) {
+      if (id === 'payload') return { textContent: JSON.stringify(payloadOf(page)) };
+      if (id === 'unlock') return { addEventListener(_event: string, handler: typeof submit) { submit = handler; } };
+      if (id === 'message') return message;
+      if (id === 'passcode') return input;
+      if (id === 'job') return { scrollIntoView() { scrolled = true; } };
+      return null;
+    },
+    open() {},
+    write(html: string) { rendered = html; },
+    close() {},
+  };
+  const sessionStorage = {
+    getItem(key: string) {
+      if (blocked) throw new Error('Storage blocked');
+      return storage.get(key) ?? null;
+    },
+    setItem(key: string, value: string) {
+      if (blocked) throw new Error('Storage blocked');
+      storage.set(key, value);
+    },
+    removeItem(key: string) {
+      if (blocked) throw new Error('Storage blocked');
+      storage.delete(key);
+    },
+  };
+  const script = page.match(/<script>(.*?)<\/script>/s);
+  assert.ok(script);
+  new Function('document', 'sessionStorage', 'location', script[1])(document, sessionStorage, { hash });
+  return {
+    input,
+    message,
+    get html() { return rendered; },
+    get scrolled() { return scrolled; },
+    async unlock(passcode: string) {
+      input.value = passcode;
+      await submit({ preventDefault() {} });
+    },
+    async waitForAutomaticUnlock() {
+      for (let i = 0; i < 100 && rendered === '' && message.className !== 'error'; i++) await delay(10);
+    },
+  };
+}
+
+test('unlocking the dashboard remembers access for history and refresh in the same tab', async () => {
+  const storage = new Map<string, string>();
+  const dashboard = openLockedPage(lockPage(HTML, PASSCODE, FAST), storage);
+  await dashboard.unlock(PASSCODE);
+  assert.equal(dashboard.html, HTML);
+  const historyHtml = '<html><body><h1>History</h1><div id="job"></div></body></html>';
+  const historyPage = lockPage(historyHtml, PASSCODE, FAST);
+  for (let i = 0; i < 2; i++) {
+    const history = openLockedPage(historyPage, storage, false, '#job');
+    await history.waitForAutomaticUnlock();
+    assert.equal(history.html, historyHtml);
+    assert.equal(history.scrolled, true);
+  }
+});
+
+test('a fresh tab session requires manual unlock', async () => {
+  const page = openLockedPage(lockPage(HTML, PASSCODE, FAST), new Map());
+  assert.equal(page.html, '');
+  await page.unlock(PASSCODE);
+  assert.equal(page.html, HTML);
+});
+
+test('wrong passcodes are not remembered', async () => {
+  const storage = new Map<string, string>();
+  const page = openLockedPage(lockPage(HTML, PASSCODE, FAST), storage);
+  await page.unlock('wrong-passcode-wrong');
+  assert.equal(page.html, '');
+  assert.equal(page.message.className, 'error');
+  assert.equal(storage.size, 0);
+});
+
+test('a changed passcode clears remembered access and allows manual unlock', async () => {
+  const storage = new Map<string, string>();
+  const dashboard = openLockedPage(lockPage(HTML, PASSCODE, FAST), storage);
+  await dashboard.unlock(PASSCODE);
+  assert.equal(storage.size, 1);
+  const newPasscode = 'new-correct-horse-battery-staple';
+  const history = openLockedPage(lockPage(HTML, newPasscode, FAST), storage);
+  await history.waitForAutomaticUnlock();
+  assert.equal(history.html, '');
+  assert.equal(storage.size, 0);
+  await history.unlock(newPasscode);
+  assert.equal(history.html, HTML);
+});
+
+test('manual unlock still works when session storage is blocked', async () => {
+  const page = openLockedPage(lockPage(HTML, PASSCODE, FAST), new Map(), true);
+  await page.unlock(PASSCODE);
+  assert.equal(page.html, HTML);
+});
 
 test('page does not contain the original content or the passcode', () => {
   const page = lockPage(HTML, PASSCODE, FAST);
