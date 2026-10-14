@@ -27,13 +27,15 @@ const payload = JSON.parse(document.getElementById('payload').textContent);
 const form = document.getElementById('unlock');
 const message = document.getElementById('message');
 const input = document.getElementById('passcode');
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
+const sessionKey = 'qack-pulse.passcode';
+async function unlock(passcode) {
   message.className = '';
   message.textContent = 'Unlocking...';
   input.removeAttribute('aria-invalid');
   try {
-    const html = await decryptPayload(payload, input.value);
+    const html = await decryptPayload(payload, passcode);
+    // Storage can be blocked by browser settings; manual unlock must still work.
+    try { sessionStorage.setItem(sessionKey, passcode); } catch {}
     document.open();
     document.write(html);
     document.close();
@@ -41,13 +43,22 @@ form.addEventListener('submit', async (event) => {
     const target = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
     if (target !== null) target.scrollIntoView();
   } catch {
+    try { sessionStorage.removeItem(sessionKey); } catch {}
     message.className = 'error';
     message.textContent = 'Wrong passcode.';
     input.setAttribute('aria-invalid', 'true');
     input.value = '';
     input.focus();
   }
-});`;
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  await unlock(input.value);
+});
+try {
+  const passcode = sessionStorage.getItem(sessionKey);
+  if (passcode !== null) void unlock(passcode);
+} catch {}`;
 
 // Layout follows the Lockbox sign-in card. Token values are copied from src/style.ts (QACK DESIGN note).
 const PAGE_STYLE = `
