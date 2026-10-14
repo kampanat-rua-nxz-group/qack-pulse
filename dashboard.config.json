@@ -29,7 +29,14 @@
         {
           "name": "lockbox-ui-automation",
           "modules": [
-            { "name": "backoffice-ui", "workflow": "regression-tests.yml", "artifactPrefix": "playwright-report-" }
+            { "name": "validate-login-state-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-validateLogInState-", "events": ["schedule"] },
+            { "name": "all-client-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-allClient-", "events": ["schedule"] },
+            { "name": "merchant-profile-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-merchantProfile-", "events": ["schedule"] },
+            { "name": "transaction-detail-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-transactionDetail-", "events": ["schedule"] },
+            { "name": "all-transactions-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-allTransactions-", "events": ["schedule"] },
+            { "name": "login-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-login-", "events": ["schedule"] },
+            { "name": "overview-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-overview-", "events": ["schedule"] },
+            { "name": "set-password-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-setPassword-", "events": ["schedule"] }
           ]
         }
       ]
