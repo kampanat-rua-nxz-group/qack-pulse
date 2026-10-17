@@ -57,7 +57,19 @@ body {
 }
 main { max-width: var(--container-main); margin: 0 auto; }
 header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.5rem 2rem; margin-bottom: 1.5rem; }
-h1 { margin: 0; color: var(--color-text-heading); font-size: 2.25rem; line-height: 2.5rem; font-weight: 700; letter-spacing: -0.035em; }
+.brand { display: flex; align-items: center; gap: 1rem; }
+.logo {
+  flex-shrink: 0;
+  border-radius: 0.6875rem;
+  box-shadow: 0 0 20px -3px rgb(45 212 191 / 28%), 0 2px 6px rgb(0 0 0 / 40%);
+}
+h1 { margin: 0; color: var(--color-text-heading); font-size: 2.125rem; line-height: 2.5rem; font-weight: 800; letter-spacing: -0.02em; }
+h1 .accent {
+  background: linear-gradient(135deg, var(--color-brand-secondary) 0%, var(--color-brand-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .lede { margin: 0.375rem 0 0; max-width: 36rem; color: var(--color-text-muted); }
 .generated { margin: 0; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
 .card {

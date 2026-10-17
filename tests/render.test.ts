@@ -335,3 +335,13 @@ test('keeps the Run column and its link when no trend is given', () => {
   assert.doesNotMatch(html, /history\.html/);
   assert.match(html, /<td class="history"><a href="https:\/\/github\.com\/[^"]*">run<\/a><\/td>/);
 });
+
+test('renders the pulse wave and checkmark hero logo and styled headline in the header', () => {
+  const html = render(dashboard(), 0.8);
+  assert.match(html, /<svg class="logo"[^>]*aria-hidden="true"/);
+  assert.match(html, /<header>\s*<div class="brand">/);
+  assert.match(html, /<h1>QACK <span class="accent">PULSE<\/span><\/h1>/);
+  assert.match(html, /<circle cx="37" cy="15"/);
+});
+
+

@@ -10,3 +10,7 @@ export const ICONS: Record<'executed' | 'passed' | 'failed' | 'flaky' | 'skipped
   flaky: svg('<path d="M8 2.5l6 10.5H2z"/><path d="M8 7v2.5M8 11.3v.1"/>'),
   skipped: svg('<circle cx="8" cy="8" r="5.5"/><path d="M4.3 11.7l7.4-7.4"/>'),
 };
+
+export const LOGO =
+  '<svg class="logo" viewBox="0 0 44 44" width="44" height="44" fill="none" aria-hidden="true"><rect width="44" height="44" rx="11" fill="var(--color-surface-card-top)" stroke="var(--color-brand-border)" stroke-width="1.25"/><path d="M6 22h32" stroke="var(--color-guide)" stroke-width="1" stroke-dasharray="2 3"/><path d="M6 22h6l2 2 2-5 2 3l2.5 6 3.5-18 4.5 20 8.5-15" stroke="var(--color-brand-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="2" fill="var(--color-brand-secondary)"/></svg>';
+

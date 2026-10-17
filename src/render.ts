@@ -1,7 +1,7 @@
 import type { NoDataReason, RunFailedDetail } from './collect.ts';
 import type { Dashboard, ModuleRow, Summary } from './rollup.ts';
 import { historyId } from './history-page.ts';
-import { ICONS } from './icons.ts';
+import { ICONS, LOGO } from './icons.ts';
 import type { Counts } from './stats.ts';
 import { STYLE } from './style.ts';
 import type { DashboardTrend } from './trend.ts';
@@ -173,9 +173,12 @@ export function render(dashboard: Dashboard, roseAtPassRate: number, trend: Dash
 <body>
 <main>
 <header>
+<div class="brand">
+${LOGO}
 <div>
-<h1>qack-pulse</h1>
+<h1>QACK <span class="accent">PULSE</span></h1>
 <p class="lede">Latest test automation results. Counts roll up from module to repo to product.</p>
+</div>
 </div>
 <p class="generated">Generated ${formatDate(dashboard.generatedAt)} UTC+7</p>
 </header>
