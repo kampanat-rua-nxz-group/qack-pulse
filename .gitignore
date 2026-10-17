@@ -3,3 +3,5 @@ data/
 .playwright-mcp/
 site/
 .claude/worktrees/
+.serena/
+.claude/.headroom*
