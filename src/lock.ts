@@ -1,6 +1,7 @@
 import { createCipheriv, pbkdf2Sync, randomBytes } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { LOGO } from './icons.ts';
 
 export const MIN_PASSCODE_LENGTH = 16;
 const DEFAULT_ITERATIONS = 600_000;
@@ -65,12 +66,13 @@ const PAGE_STYLE = `
 :root {
   --color-brand-primary: #2dd4bf;
   --color-brand-secondary: #5eead4;
-  --color-brand-tint: rgb(45 212 191 / 5%);
   --color-brand-border: rgb(45 212 191 / 30%);
   --color-focus-ring: rgb(45 212 191 / 50%);
   --color-canvas: #09101a;
   --color-canvas-gradient-end: #151b2c;
   --color-row-module: #0d1626;
+  --color-surface-card-top: rgb(18 29 46 / 82%);
+  --color-guide: rgb(255 255 255 / 9%);
   --color-text-primary: #f8fafc;
   --color-text-heading: #ffffff;
   --color-text-muted: #a1a1aa;
@@ -95,13 +97,18 @@ body {
   background: var(--color-row-module);
   box-shadow: 0 1px 0 rgb(255 255 255 / 4%) inset, 0 24px 48px -24px rgb(0 0 0 / 55%);
 }
-.brand { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 2rem; }
-.mark {
-  display: grid; place-items: center; width: 2.25rem; height: 2.25rem;
-  border: 1px solid var(--color-brand-border); border-radius: 0.5rem;
-  background: var(--color-brand-tint); color: var(--color-brand-primary);
+.brand { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+.logo {
+  flex-shrink: 0;
+  border-radius: 0.6875rem;
+  box-shadow: 0 0 20px -3px rgb(45 212 191 / 28%), 0 2px 6px rgb(0 0 0 / 40%);
 }
-.name { color: var(--color-text-heading); font-size: 1.125rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25rem; }
+.name { color: var(--color-text-heading); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.75rem; }
+.name .accent {
+  background: linear-gradient(135deg, var(--color-brand-secondary) 0%, var(--color-brand-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 .tagline { color: var(--color-text-muted); font-size: 0.6875rem; font-weight: 500; }
 h1 { margin: 0 0 0.25rem; color: var(--color-text-heading); font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; }
 .lede { margin: 0 0 1.75rem; color: var(--color-text-muted); font-size: 0.8125rem; }
@@ -124,9 +131,6 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 #message { min-height: 1.125rem; margin: 0.5rem 0 0; color: var(--color-text-muted); font-size: 0.75rem; line-height: 1.125rem; }
 #message.error { color: var(--color-error); }
 .foot { margin: 1.5rem 0 0; color: var(--color-text-muted); font-size: 0.6875rem; text-align: center; }`;
-
-const LOCK_ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>';
 
 // Returns a page that holds the encrypted HTML and asks for the passcode before showing it.
 export function lockPage(html: string, passcode: string, iterations: number = DEFAULT_ITERATIONS): string {
@@ -151,8 +155,8 @@ export function lockPage(html: string, passcode: string, iterations: number = DE
 <body>
 <main class="card">
 <div class="brand">
-<span class="mark">${LOCK_ICON}</span>
-<div><div class="name">qack-pulse</div><div class="tagline">Test automation results</div></div>
+${LOGO}
+<div><div class="name">QACK <span class="accent">PULSE</span></div><div class="tagline">Test automation results</div></div>
 </div>
 <h1>Sign in</h1>
 <p class="lede">Enter the passcode to continue</p>

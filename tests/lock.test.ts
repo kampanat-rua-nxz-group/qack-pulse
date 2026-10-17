@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
+import { LOGO } from '../src/icons.ts';
 import { DECRYPT_SOURCE, MIN_PASSCODE_LENGTH, lockFile, lockPage } from '../src/lock.ts';
 
 const PASSCODE = 'correct-horse-battery-staple';
@@ -145,6 +146,14 @@ test('page is a login card styled with the QACK design tokens', () => {
   assert.match(page, /--color-canvas: #09101a/);
   assert.match(page, /class="card"/);
   assert.match(page, /id="message" role="status"/);
+});
+
+test('page brand matches the dashboard logo and wordmark', () => {
+  const page = lockPage(HTML, PASSCODE, FAST);
+  assert.ok(page.includes(LOGO));
+  assert.match(page, /QACK <span class="accent">PULSE<\/span>/);
+  assert.match(page, /--color-surface-card-top: /);
+  assert.match(page, /--color-guide: /);
 });
 
 test('the browser decrypt function restores the original page', async () => {
