@@ -29,7 +29,6 @@
         {
           "name": "lockbox-ui-automation",
           "modules": [
-            { "name": "validate-login-state-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-validateLogInState-" },
             { "name": "all-client-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-allClient-" },
             { "name": "merchant-profile-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-merchantProfile-" },
             { "name": "transaction-detail-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-transactionDetail-" },
