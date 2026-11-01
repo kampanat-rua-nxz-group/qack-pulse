@@ -102,13 +102,25 @@ const countCells = (counts: Counts): string =>
 
 const dashCells = Array(5).fill(`<td class="num">${DASH}</td>`).join('');
 
-const fold = (id: string, name: string, controls: string[]): string => `<input type="checkbox" class="fold" id="fold-${id}" checked aria-label="Show ${id.startsWith('p') ? 'repositories' : 'modules'} for ${escapeHtml(name)}"${controls.length ? ` aria-controls="${controls.join(' ')}"` : ''}>`;
+const fold = (id: string, name: string, controls: string[]): string => `<label class="fold-label" for="fold-${id}"><input type="checkbox" class="fold" id="fold-${id}" role="switch" checked aria-label="Show ${id.startsWith('p') ? 'repositories' : 'modules'} for ${escapeHtml(name)}"${controls.length ? ` aria-controls="${controls.join(' ')}"` : ''}>Show ${id.startsWith('p') ? 'repositories' : 'modules'}</label>`;
 
 const summaryRow = (kind: string, name: string, summary: Summary, id: string, controls: string[]): string => {
   const failed = summary.modulesFailed > 0 ? ` <span class="badge">${summary.modulesFailed} ${summary.modulesFailed === 1 ? 'module' : 'modules'} failed</span>` : '';
   const counts = summary.modulesReporting === 0 ? dashCells : countCells(summary.counts);
   const rate = summary.modulesReporting === 0 ? null : summary.passRate;
-  return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<th scope="row" class="name">${escapeHtml(name)} <span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}${fold(id, name, controls)}</th>${healthCells(rate)}${counts}<td></td><td></td><td></td></tr>`;
+  const coverage = summary.modulesReporting < summary.modulesTotal ? `<span class="incomplete">Incomplete: ${summary.modulesReporting} of ${summary.modulesTotal} modules reporting</span>` : '';
+  return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<th scope="row" class="name">${escapeHtml(name)} <span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}${fold(id, name, controls)}</th>${healthCells(rate).replace('</td>', `${coverage}</td>`)}${counts}<td></td><td></td><td></td></tr>`;
+};
+
+const attention = (dashboard: Dashboard, trend: DashboardTrend | null): string => {
+  const items = dashboard.products.flatMap((product, p) => product.repos.flatMap((repo, r) => repo.modules.flatMap((mod, m) => {
+    const reasons = [mod.status === 'no-data' ? 'No data' : '', mod.status === 'run-failed' ? 'Run failed' : '', mod.status === 'ok' && mod.counts.failed > 0 ? 'Failed tests' : '', mod.stale ? 'Stale' : ''].filter(Boolean);
+    if (!reasons.length) return [];
+    const path = [product.name, repo.name, mod.name].map(escapeHtml).join(' / ');
+    const links = [runLink(mod.runUrl, mod.name), trend === null ? '' : `<a href="history.html#${historyId(p, r, m)}" aria-label="History for ${escapeHtml(mod.name)}">history</a>`].filter(Boolean).join(' ');
+    return [`<li><span><strong>${path}</strong> <span class="attention-reason">${reasons.join(' · ')}</span></span><span class="attention-links">${links}</span></li>`];
+  })));
+  return items.length ? `<section class="attention"><h2>Needs attention <span>(${items.length})</span></h2><ul>${items.join('')}</ul></section>` : '';
 };
 
 function moduleRow(mod: ModuleRow, now: string, historyId: string | null, id: string): string {
@@ -193,7 +205,9 @@ ${LOGO}
 <p class="generated">Generated ${formatDate(dashboard.generatedAt)} UTC+7<br>Ages and stale status are as of generation.</p>
 </header>
 ${counters(dashboard.products)}
+${attention(dashboard, trend)}
 ${trend === null ? '' : trendCards(dashboard, trend, roseAtPassRate)}
+<p class="health-explainer">Health is passed tests divided by executed tests (total minus skipped). The bar's tick marks ${Number((roseAtPassRate * 100).toFixed(1))}%; flaky tests count as not passed.</p>
 <p class="scroll-hint" id="table-scroll-hint">Scroll horizontally to see all columns.</p>
 <div class="card" role="region" aria-label="Test results" aria-describedby="table-scroll-hint" tabindex="0">
 <table style="--rose-at:${roseAtPassRate}">

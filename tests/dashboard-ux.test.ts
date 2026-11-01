@@ -26,8 +26,8 @@ test('explains the current rate, historical comparison and carried-forward resul
 
 test('provides checked controls labelled for visible descendants and linked to their rows', () => {
   const html = render(dashboard, 0.8);
-  assert.match(html, /type="checkbox" class="fold" id="fold-p0" checked aria-label="Show repositories for Product" aria-controls="group-r0"/);
-  assert.match(html, /type="checkbox" class="fold" id="fold-r0" checked aria-label="Show modules for Repo" aria-controls="module-r0-0"/);
+  assert.match(html, /type="checkbox" class="fold" id="fold-p0" role="switch" checked aria-label="Show repositories for Product" aria-controls="group-r0"/);
+  assert.match(html, /type="checkbox" class="fold" id="fold-r0" role="switch" checked aria-label="Show modules for Repo" aria-controls="module-r0-0"/);
   assert.match(html, /<tbody id="group-r0"/);
   assert.match(html, /<tr id="module-r0-0"/);
   assert.match(html, /#fold-r0:not\(:checked\)/);
@@ -66,4 +66,39 @@ test('keeps long trend-card names visible and able to wrap', () => {
 test('gives the daily pass-rate disclosure a comfortable touch target', () => {
   const html = render(dashboard, 0.8, history);
   assert.match(html, /\.trend-details summary \{[^}]*padding: 0\.75rem 0/);
+});
+
+test('surfaces modules needing attention with direct actions and context', () => {
+  const failing = { ...module, counts: { ...counts, passed: 0, failed: 1 }, passRate: 0, stale: true };
+  const data = { ...dashboard, products: [{ ...dashboard.products[0], repos: [{ ...dashboard.products[0].repos[0], modules: [failing] }] }] } as Dashboard;
+  const html = render(data, 0.8, history);
+  assert.match(html, /Needs attention/);
+  assert.match(html, /Product \/ Repo \/ API/);
+  assert.match(html, /Failed tests/);
+  assert.match(html, /Stale/);
+  assert.match(html, /aria-label="Run for API"/);
+});
+
+test('explains health near the table and flags incomplete rollups beside the rate', () => {
+  const partial = { ...dashboard, products: [{ ...dashboard.products[0], modulesTotal: 2 }] } as Dashboard;
+  const html = render(partial, 0.8);
+  assert.ok(html.indexOf('Health is passed tests divided by executed tests') < html.indexOf('<table'));
+  assert.match(html, /class="health"[^>]*>.*Incomplete: 1 of 2 modules reporting/);
+});
+
+test('makes hierarchy controls visibly labelled and limits sticky width on narrow screens', () => {
+  const html = render(dashboard, 0.8);
+  assert.match(html, /<label[^>]*for="fold-p0"[^>]*>.*Show repositories/s);
+  assert.match(html, /role="switch"/);
+  assert.match(html, /max-width: 7rem/);
+});
+
+test('lists missing and failed runs without treating unknown counts as failures', () => {
+  const missing = { name: '<missing>', status: 'no-data', reason: 'no-run', runDate: null, stale: false, runUrl: null };
+  const failed = { name: 'Failed run', status: 'run-failed', reason: 'stats-missing', runDate: '2026-10-12T04:00:00Z', stale: false, runUrl: 'https://github.com/org/repo/actions/runs/2' };
+  const data = { ...dashboard, products: [{ ...dashboard.products[0], repos: [{ ...dashboard.products[0].repos[0], modules: [missing, failed] }] }] } as Dashboard;
+  const html = render(data, 0.8);
+  assert.match(html, /Product \/ Repo \/ &lt;missing&gt;<\/strong> <span class="attention-reason">No data/);
+  assert.match(html, /Failed run<\/strong> <span class="attention-reason">Run failed/);
+  assert.doesNotMatch(render(dashboard, 0.8), /<h2>Needs attention/);
 });

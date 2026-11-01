@@ -173,7 +173,7 @@ test('turns a repo and product rose and badges the failed modules, even with a h
 test('shows a dash, not zero, in every count and rate column when no module reported', () => {
   const html = render(dashboard(noDataModule, { ...noRate, counts: { total: 0, passed: 0, failed: 0, skipped: 0, flaky: 0 }, modulesReporting: 0 }), 0.8);
   const dashes = '<td class="num">\u2014</td>'.repeat(5);
-  assert.match(html, new RegExp(`<tr class="repo no-rate">.*?\u2014</td>${dashes}`));
+  assert.match(html, new RegExp(`<tr class="repo no-rate">.*?\u2014.*?</td>${dashes}`));
   assert.doesNotMatch(html, /<tr class="repo[^>]*>.*?<td class="num">0<\/td>/);
 });
 
@@ -223,9 +223,9 @@ const twoRepos = (): Dashboard =>
 test('puts a fold checkbox with a label in each product and repo row, and none in module rows', () => {
   const html = render(twoRepos(), 0.8);
   assert.equal(html.match(/<input type="checkbox" class="fold"/g)?.length, 5);
-  assert.match(html, /<th scope="row" class="name">Lockbox <span class="sub">.*?<input type="checkbox" class="fold" id="fold-p0" checked aria-label="Show repositories for Lockbox" aria-controls="group-r0 group-r1"><\/th>/);
-  assert.match(html, /<input type="checkbox" class="fold" id="fold-r1" checked aria-label="Show modules for ui" aria-controls="module-r1-0 module-r1-1"><\/th>/);
-  assert.match(html, /<input type="checkbox" class="fold" id="fold-r2" checked aria-label="Show modules for misc" aria-controls="module-r2-0"><\/th>/);
+  assert.match(html, /<th scope="row" class="name">Lockbox <span class="sub">.*?<input type="checkbox" class="fold" id="fold-p0" role="switch" checked aria-label="Show repositories for Lockbox" aria-controls="group-r0 group-r1">Show repositories<\/label><\/th>/);
+  assert.match(html, /<input type="checkbox" class="fold" id="fold-r1" role="switch" checked aria-label="Show modules for ui" aria-controls="module-r1-0 module-r1-1">Show modules<\/label><\/th>/);
+  assert.match(html, /<input type="checkbox" class="fold" id="fold-r2" role="switch" checked aria-label="Show modules for misc" aria-controls="module-r2-0">Show modules<\/label><\/th>/);
   assert.doesNotMatch(html, /<tr id="module-r0-0" class="module[^>]*>[^\n]*<input/);
 });
 
@@ -353,7 +353,7 @@ test('offers an accessible scrollable results table with a narrow-screen hint', 
 
 test('allows long sticky row names to wrap on narrow screens', () => {
   const html = render(dashboard(), 0.8);
-  assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?td\.name[^}]*max-width: 11rem/);
+  assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?td\.name[^}]*max-width: 7rem/);
   assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?th\.name:has\(> \.sub\) \{ white-space: normal; \}/);
 });
 
