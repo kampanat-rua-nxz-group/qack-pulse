@@ -323,6 +323,12 @@ test('links each module row to its card on the history page when a trend is give
   assert.doesNotMatch(html, />run<\/a>/);
 });
 
+test('keeps the history column reachable when the table is wider than its card', () => {
+  const html = render(dashboard(), 0.8, trendFor(trendOf('flat', 0)));
+  assert.match(html, /\.card\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(html, /td\.history\s*\{[^}]*white-space:\s*nowrap/s);
+});
+
 test('links no-data and run-failed modules to the history page too, and only module rows', () => {
   assert.match(render(dashboard(noDataModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="history\.html#m-0-0-0">history<\/a><\/td>/);
   assert.match(render(dashboard(runFailedModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="history\.html#m-0-0-0">history<\/a><\/td>/);

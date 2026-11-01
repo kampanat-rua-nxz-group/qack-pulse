@@ -73,7 +73,7 @@ h1 .accent {
 .lede { margin: 0.375rem 0 0; max-width: 36rem; color: var(--color-text-muted); }
 .generated { margin: 0; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
 .card {
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid var(--color-border-card);
   border-radius: var(--radius-card);
   background: var(--color-row-module);
@@ -85,6 +85,7 @@ td { padding: 0.5rem 0.875rem; border-top: 1px solid var(--color-border-subtle);
 thead + tbody tr:first-child td { border-top: 0; }
 th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 td.bad { color: var(--color-error); font-weight: 600; }
+td.history { white-space: nowrap; }
 tr {
   --tealShare: clamp(0, (var(--pass) - var(--rose-at)) / (1 - var(--rose-at)), 1);
   --health: color-mix(in oklch, var(--color-brand-primary) calc(var(--tealShare) * 100%), var(--color-form-error));
