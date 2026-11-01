@@ -14,7 +14,7 @@
             { "name": "merchant-api", "workflow": "regression.yaml", "artifactPrefix": "report-merchant-" },
             { "name": "onboard-api", "workflow": "regression.yaml", "artifactPrefix": "report-onboard-" },
             { "name": "chain-connector", "workflow": "regression.yaml", "artifactPrefix": "report-chain-connector-" },
-            { "name": "e2e", "workflow": "e2e.yaml", "artifactPrefix": "playwright-report-", "events": ["schedule"], "staleAfterDays": 8 }
+            { "name": "e2e", "workflow": "e2e.yaml", "artifactPrefix": "playwright-report-", "staleAfterDays": 8 }
           ]
         },
         {
@@ -29,14 +29,14 @@
         {
           "name": "lockbox-ui-automation",
           "modules": [
-            { "name": "validate-login-state-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-validateLogInState-", "events": ["schedule"] },
-            { "name": "all-client-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-allClient-", "events": ["schedule"] },
-            { "name": "merchant-profile-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-merchantProfile-", "events": ["schedule"] },
-            { "name": "transaction-detail-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-transactionDetail-", "events": ["schedule"] },
-            { "name": "all-transactions-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-allTransactions-", "events": ["schedule"] },
-            { "name": "login-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-login-", "events": ["schedule"] },
-            { "name": "overview-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-overview-", "events": ["schedule"] },
-            { "name": "set-password-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-setPassword-", "events": ["schedule"] }
+            { "name": "validate-login-state-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-validateLogInState-" },
+            { "name": "all-client-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-allClient-" },
+            { "name": "merchant-profile-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-merchantProfile-" },
+            { "name": "transaction-detail-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-transactionDetail-" },
+            { "name": "all-transactions-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-allTransactions-" },
+            { "name": "login-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-login-" },
+            { "name": "overview-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-overview-" },
+            { "name": "set-password-ui", "workflow": "regression-tests.yml", "artifactPrefix": "report-setPassword-" }
           ]
         }
       ]
