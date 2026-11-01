@@ -105,7 +105,10 @@ tr.product th.name { padding-left: 2.25rem; }
 tr.product td, tr.product th.name { padding-top: 0.875rem; padding-bottom: 0.875rem; border-top: 1px solid var(--color-brand-border); color: var(--color-text-heading); font-size: 1rem; font-weight: 700; }
 tr.repo { --row-bg: var(--color-row-repo); }
 tr.repo td, tr.repo th.name { font-weight: 600; }
-tr.repo th.name { padding: 0.75rem 0.875rem 0.75rem 2.875rem; }
+tr.repo th.name { min-width: 18rem; padding: 0.5rem 0.875rem 0.5rem 2.875rem; }
+.repo-name { display: block; }
+.repo-status { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; }
+.repo-status .sub, .repo-status .badge { margin-left: 0; white-space: nowrap; }
 tr.module th.name { padding-left: 3.875rem; }
 tr.repo th.name, tr.module th.name { background-repeat: no-repeat; background-size: 1px 100%; }
 tr.repo th.name { background-image: linear-gradient(var(--color-guide), var(--color-guide)); background-position: 0.875rem 0; }
@@ -183,6 +186,7 @@ a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2p
   h1 { font-size: 1.875rem; line-height: 2.25rem; }
   th, td { padding-left: 0.5rem; padding-right: 0.5rem; }
   th.name, td.name { min-width: 7rem; max-width: 7rem; }
+  tr.repo th.name { min-width: 7rem; }
   tr.product th.name, tr.repo th.name, tr.module th.name { padding-left: 0.5rem; }
   th.name:has(> .sub) { white-space: normal; }
   th.name, td.name { position: sticky; left: 0; z-index: 1; }

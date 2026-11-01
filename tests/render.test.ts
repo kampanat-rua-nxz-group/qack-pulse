@@ -60,7 +60,7 @@ test('escapes the five HTML characters', () => {
 test('shows a row for the product, the repo, and the module with its counts', () => {
   const html = render(dashboard(), 0.8);
   assert.match(html, /<tr class="product" style="--pass:0\.8333"><th scope="row" class="name">Lockbox <span class="sub">1 of 1 modules<\/span>/);
-  assert.match(html, /<tr class="repo" style="--pass:0\.8333"><th scope="row" class="name">lockbox-api-automation <span class="sub">1 of 1 modules<\/span>/);
+  assert.match(html, /<tr class="repo" style="--pass:0\.8333"><th scope="row" class="name"><span class="repo-name">lockbox-api-automation<\/span> <span class="repo-status"><span class="sub">1 of 1 modules<\/span>/);
   assert.match(html, /<tr id="module-r0-0" class="module" style="--pass:0\.8333"><th scope="row" class="name">merchant-api<\/th>/);
   assert.match(html, /<td class="num">100<\/td><td class="num">80<\/td><td class="num bad">10<\/td><td class="num">4<\/td><td class="num">6<\/td>/);
 });

@@ -109,7 +109,9 @@ const summaryRow = (kind: string, name: string, summary: Summary, id: string, co
   const counts = summary.modulesReporting === 0 ? dashCells : countCells(summary.counts);
   const rate = summary.modulesReporting === 0 ? null : summary.passRate;
   const coverage = summary.modulesReporting < summary.modulesTotal ? `<span class="incomplete">Incomplete: ${summary.modulesReporting} of ${summary.modulesTotal} modules reporting</span>` : '';
-  return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<th scope="row" class="name">${escapeHtml(name)} <span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}${fold(id, name, controls)}</th>${healthCells(rate).replace('</td>', `${coverage}</td>`)}${counts}<td></td><td></td><td></td></tr>`;
+  const details = `<span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}`;
+  const label = kind === 'repo' ? `<span class="repo-name">${escapeHtml(name)}</span> <span class="repo-status">${details}</span>` : `${escapeHtml(name)} ${details}`;
+  return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<th scope="row" class="name">${label}${fold(id, name, controls)}</th>${healthCells(rate).replace('</td>', `${coverage}</td>`)}${counts}<td></td><td></td><td></td></tr>`;
 };
 
 const attention = (dashboard: Dashboard, trend: DashboardTrend | null): string => {
