@@ -72,6 +72,7 @@ h1 .accent {
 
 .lede { margin: 0.375rem 0 0; max-width: 36rem; color: var(--color-text-muted); }
 .generated { margin: 0; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.scroll-hint { margin: 0 0 0.5rem; color: var(--color-text-muted); }
 .card {
   overflow-x: auto;
   border: 1px solid var(--color-border-card);
@@ -86,6 +87,7 @@ thead + tbody tr:first-child td { border-top: 0; }
 th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 td.bad { color: var(--color-error); font-weight: 600; }
 td.history { white-space: nowrap; }
+td.history a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 tr {
   --tealShare: clamp(0, (var(--pass) - var(--rose-at)) / (1 - var(--rose-at)), 1);
   --health: color-mix(in oklch, var(--color-brand-primary) calc(var(--tealShare) * 100%), var(--color-form-error));
@@ -101,7 +103,7 @@ tr.product td.name { padding-left: 2.25rem; }
 tr.product td { padding-top: 0.875rem; padding-bottom: 0.875rem; border-top: 1px solid var(--color-brand-border); color: var(--color-text-heading); font-size: 1rem; font-weight: 700; }
 tr.repo { --row-bg: var(--color-row-repo); }
 tr.repo td { font-weight: 600; }
-tr.repo td.name { padding-left: 2.875rem; }
+tr.repo td.name { padding: 0.75rem 0.875rem 0.75rem 2.875rem; }
 tr.module td.name { padding-left: 3.875rem; }
 tr.repo td.name, tr.module td.name { background-repeat: no-repeat; background-size: 1px 100%; }
 tr.repo td.name { background-image: linear-gradient(var(--color-guide), var(--color-guide)); background-position: 0.875rem 0; }
@@ -130,6 +132,7 @@ a { color: var(--color-brand-secondary); text-decoration: underline; text-decora
 a:hover { text-decoration-color: currentColor; }
 a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; border-radius: 0.25rem; }
 .counters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.coverage { margin: 0 0 0.5rem; color: var(--color-text-muted); }
 .counter { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; border: 1px solid var(--chip-border); border-radius: var(--radius-pill); background: var(--chip-bg); color: var(--chip-text); font-variant-numeric: tabular-nums; }
 .counter .count { font-size: 1rem; font-weight: 700; }
 .counter .label { color: var(--color-text-muted); }
@@ -168,7 +171,10 @@ a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2p
   body { padding: 2rem 1rem 3rem; }
   h1 { font-size: 1.875rem; line-height: 2.25rem; }
   th, td { padding-left: 0.5rem; padding-right: 0.5rem; }
-  th.name, td.name { min-width: 8rem; }
+  th.name, td.name { min-width: 8rem; max-width: 11rem; }
+  td.name:has(> .sub) { white-space: normal; }
+  th.name, td.name { position: sticky; left: 0; z-index: 1; }
+  th.name { z-index: 2; }
 }
 @media (prefers-reduced-motion: reduce) {
   .swatch::after { animation: none; }

@@ -49,6 +49,23 @@ const line = (overrides: HistoryLine = {}): HistoryLine => ({
 
 const page = (rows: HistoryLine[] = [line()], data = dashboard()): string => renderHistory(data, rows, NOW, 0.8);
 
+test('offers keyboard accessible month choices and exposes run details', () => {
+  const html = page([line({ startTime: '2026-08-20T03:00:00Z', runId: 7 }), line()]);
+  assert.doesNotMatch(html, /\.mon \{ display: none; \}/);
+  assert.match(html, /<label class="month-choice" for="m-0-0-0-1">September 2026<\/label>/);
+  assert.match(html, /aria-label="Open run for 2026-10-09: 80 passed, 10 failed, 4 skipped, 6 flaky"/);
+  assert.match(html, /<summary>Run details<\/summary>/);
+  assert.match(html, /<li>2026-10-09: 80 passed, 10 failed, 4 skipped, 6 flaky<\/li>/);
+});
+
+test('keeps the calendar scrollable and its controls usable on narrow screens', () => {
+  const html = page();
+  assert.match(html, /class="calendar-scroll" role="region" aria-label="October 2026 calendar" tabindex="0"/);
+  assert.match(html, /\.cal \{[^}]*minmax\(2\.75rem, 1fr\)/);
+  assert.match(html, /\.picker a \{[^}]*min-height: 2\.75rem/);
+  assert.match(html, /\.month-choice \{[^}]*min-height: 2\.75rem/);
+});
+
 // The section of one workflow job, so a test only sees that job's calendar.
 const section = (html: string, id: string): string => html.match(new RegExp(`<section class="job" id="${id}">.*?</section>`, 's'))?.[0] ?? '';
 
@@ -128,7 +145,7 @@ test('starts each week on Sunday and pads the days before the first of the month
 
 test('colors a day with a run by its pass rate and links it to the run', () => {
   const cell = section(page(), 'm-0-0-0').match(/<li class="day ran"[^>]*>.*?<\/li>/)?.[0] ?? '';
-  assert.equal(cell, `<li class="day ran" style="--pass:0.8333"><a href="${RUN_URL}" title="2026-10-09: 80 passed, 10 failed, 4 skipped, 6 flaky"><b>9</b><span>83.3%</span></a></li>`);
+  assert.equal(cell, `<li class="day ran" style="--pass:0.8333"><a href="${RUN_URL}" title="2026-10-09: 80 passed, 10 failed, 4 skipped, 6 flaky" aria-label="Open run for 2026-10-09: 80 passed, 10 failed, 4 skipped, 6 flaky"><b>9</b><span>83.3%</span></a></li>`);
 });
 
 test('shows a day without a run as an empty cell with no link', () => {
@@ -148,7 +165,7 @@ test('adds up the shards of one run and keeps only the newest run of a day', () 
     line({ runId: 2, artifact: 'b', startTime: '2026-10-09T05:01:00Z', passed: 30, failed: 0, skipped: 0, flaky: 0, runUrl: `${RUN_URL}9` }),
   ];
   const html = section(page(rows), 'm-0-0-0');
-  assert.match(html, /<li class="day ran" style="--pass:0\.8571"><a href="[^"]*9" title="2026-10-09: 60 passed, 10 failed, 0 skipped, 0 flaky"><b>9<\/b><span>85\.7%<\/span>/);
+  assert.match(html, /<li class="day ran" style="--pass:0\.8571"><a href="[^"]*9" title="2026-10-09: 60 passed, 10 failed, 0 skipped, 0 flaky" aria-label="Open run for 2026-10-09: 60 passed, 10 failed, 0 skipped, 0 flaky"><b>9<\/b><span>85\.7%<\/span>/);
   assert.equal((html.match(/class="day ran/g) ?? []).length, 1);
 });
 
@@ -160,7 +177,7 @@ test('keeps each job to its own runs', () => {
 
 test('shows a run where every test was skipped in grey with no rate', () => {
   const rows = [line({ passed: 0, failed: 0, skipped: 5, flaky: 0 })];
-  assert.match(section(page(rows), 'm-0-0-0'), /<li class="day ran no-rate"><a [^>]*title="2026-10-09: 0 passed, 0 failed, 5 skipped, 0 flaky"><b>9<\/b><span>—<\/span><\/a><\/li>/);
+  assert.match(section(page(rows), 'm-0-0-0'), /<li class="day ran no-rate"><a [^>]*title="2026-10-09: 0 passed, 0 failed, 5 skipped, 0 flaky" aria-label="Open run for 2026-10-09: 0 passed, 0 failed, 5 skipped, 0 flaky"><b>9<\/b><span>—<\/span><\/a><\/li>/);
 });
 
 test('drops a run link that is not a GitHub https address but still shows the day', () => {

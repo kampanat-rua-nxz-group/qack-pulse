@@ -68,15 +68,15 @@ const lastRun = (iso: string | null, stale: boolean, now: string): string => {
 // Only GitHub https links become anchors. Anything else is dropped.
 export const safeUrl = (url: string | null): string | null => (url !== null && /^https:\/\/github\.com\//.test(url) ? url : null);
 
-const runLink = (url: string | null): string => {
+const runLink = (url: string | null, name: string): string => {
   const href = safeUrl(url);
-  return href === null ? '' : `<a href="${escapeHtml(href)}">run</a>`;
+  return href === null ? '' : `<a href="${escapeHtml(href)}" aria-label="Run for ${escapeHtml(name)}">run</a>`;
 };
 
 // With a trend the cell points at the module's card on the history page, which carries the run link.
 // Without one there is no history page, so the cell keeps the plain run link.
-const historyCell = (url: string | null, id: string | null): string =>
-  `<td class="history">${id === null ? runLink(url) : `<a href="history.html#${id}">history</a>`}</td>`;
+const historyCell = (url: string | null, id: string | null, name: string): string =>
+  `<td class="history">${id === null ? runLink(url, name) : `<a href="history.html#${id}" aria-label="History for ${escapeHtml(name)}">history</a>`}</td>`;
 
 // The row carries only the pass rate. CSS turns it into the health color.
 // A failed run overrides the scale because its counts are unknown.
@@ -95,7 +95,7 @@ const countCells = (counts: Counts): string =>
 
 const dashCells = Array(5).fill(`<td class="num">${DASH}</td>`).join('');
 
-const fold = (id: string, name: string): string => `<input type="checkbox" class="fold" id="fold-${id}" aria-label="Collapse ${escapeHtml(name)}">`;
+const fold = (id: string, name: string): string => `<input type="checkbox" class="fold" id="fold-${id}" aria-label="Collapse or expand ${escapeHtml(name)}">`;
 
 const summaryRow = (kind: string, name: string, summary: Summary, id: string): string => {
   const failed = summary.modulesFailed > 0 ? ` <span class="badge">${summary.modulesFailed} ${summary.modulesFailed === 1 ? 'module' : 'modules'} failed</span>` : '';
@@ -107,12 +107,12 @@ const summaryRow = (kind: string, name: string, summary: Summary, id: string): s
 function moduleRow(mod: ModuleRow, now: string, historyId: string | null): string {
   const name = `<td class="name">${escapeHtml(mod.name)}`;
   if (mod.status === 'no-data') {
-    return `${rowOpen('module no-data', null)}${name}</td>${healthCells(null)}<td colspan="5" class="reason">No data: ${REASONS[mod.reason]}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId)}</tr>`;
+    return `${rowOpen('module no-data', null)}${name}</td>${healthCells(null)}<td colspan="5" class="reason">No data: ${REASONS[mod.reason]}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
   }
   if (mod.status === 'run-failed') {
-    return `${rowOpen('module', null, true)}${name}</td>${healthCells(null)}<td colspan="5" class="failed-text">Run failed, no results <span class="sub">(${DETAILS[mod.reason]})</span></td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId)}</tr>`;
+    return `${rowOpen('module', null, true)}${name}</td>${healthCells(null)}<td colspan="5" class="failed-text">Run failed, no results <span class="sub">(${DETAILS[mod.reason]})</span></td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
   }
-  return `${rowOpen('module', mod.passRate)}${name}</td>${healthCells(mod.passRate)}${countCells(mod.counts)}<td class="num">${formatDuration(mod.durationMs)}</td><td>${lastRun(mod.startTime, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId)}</tr>`;
+  return `${rowOpen('module', mod.passRate)}${name}</td>${healthCells(mod.passRate)}${countCells(mod.counts)}<td class="num">${formatDuration(mod.durationMs)}</td><td>${lastRun(mod.startTime, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
 }
 
 type CounterKind = keyof typeof ICONS;
@@ -122,6 +122,8 @@ const COUNTER_LABELS: Record<CounterKind, string> = { executed: 'Executed', pass
 // Order follows the Playwright HTML reporter. Executed is total minus skipped, the base of every rate.
 // A zero count drops its icon and goes quiet.
 const counters = (products: Dashboard['products']): string => {
+  const reporting = products.reduce((total, product) => total + product.modulesReporting, 0);
+  const modules = products.reduce((total, product) => total + product.modulesTotal, 0);
   const sum = (pick: (counts: Counts) => number): number => products.reduce((total, product) => total + pick(product.counts), 0);
   const values: Record<CounterKind, number> = {
     executed: sum((counts) => counts.total - counts.skipped),
@@ -132,13 +134,13 @@ const counters = (products: Dashboard['products']): string => {
   };
   const total = values.executed + values.skipped;
   const items = (Object.keys(values) as CounterKind[]).map((kind) => {
-    const zero = values[kind] === 0;
+    const zero = values[kind] === 0 || reporting === 0;
     const icon = zero ? '' : ICONS[kind];
     // Every counter shows its share of all cases (executed plus skipped). A zero count shows 0.0% but drops its icon.
-    const share = total === 0 ? '' : `<span class="pct">${percent(values[kind] / total)}</span>`;
-    return `<li class="counter ${kind}${zero ? ' zero' : ''}">${icon}<span class="count">${values[kind]}</span><span class="label">${COUNTER_LABELS[kind]}</span>${share}</li>`;
+    const share = total === 0 || reporting === 0 ? '' : `<span class="pct">${percent(values[kind] / total)}</span>`;
+    return `<li class="counter ${kind}${zero ? ' zero' : ''}">${icon}<span class="count">${reporting === 0 ? DASH : values[kind]}</span><span class="label">${COUNTER_LABELS[kind]}</span>${share}</li>`;
   });
-  return `<ul class="counters">${items.join('')}</ul>`;
+  return `<p class="coverage">${reporting} of ${modules} modules reporting</p><ul class="counters">${items.join('')}</ul>`;
 };
 
 // Collapsing is CSS only. A checked box hides its group through :has(), so the page needs no script.
@@ -184,7 +186,8 @@ ${LOGO}
 </header>
 ${counters(dashboard.products)}
 ${trend === null ? '' : trendCards(dashboard, trend, roseAtPassRate)}
-<div class="card">
+<p class="scroll-hint" id="table-scroll-hint">Scroll horizontally to see all columns.</p>
+<div class="card" role="region" aria-label="Test results" aria-describedby="table-scroll-hint" tabindex="0">
 <table style="--rose-at:${roseAtPassRate}">
 <thead><tr><th class="name">Name</th><th>Health</th><th class="num">Total</th><th class="num">Passed</th><th class="num">Failed</th><th class="num">Skipped</th><th class="num">Flaky</th><th class="num">Duration</th><th>Last run (UTC+7)</th><th>${trend === null ? 'Run' : 'History'}</th></tr></thead>
 ${groups.join('\n')}
