@@ -59,8 +59,8 @@ test('escapes the five HTML characters', () => {
 
 test('shows a row for the product, the repo, and the module with its counts', () => {
   const html = render(dashboard(), 0.8);
-  assert.match(html, /<tr class="product" style="--pass:0\.8333"><th scope="row" class="name">Lockbox <span class="sub">1 of 1 modules<\/span>/);
-  assert.match(html, /<tr class="repo" style="--pass:0\.8333"><th scope="row" class="name"><span class="repo-name">lockbox-api-automation<\/span> <span class="repo-status"><span class="sub">1 of 1 modules<\/span>/);
+  assert.match(html, /<tr class="product" style="--pass:0\.8333"><th scope="row" class="name"><span class="summary-name">Lockbox<\/span> <span class="summary-status"><span class="sub">1 of 1 modules<\/span>/);
+  assert.match(html, /<tr class="repo" style="--pass:0\.8333"><th scope="row" class="name"><span class="summary-name">lockbox-api-automation<\/span> <span class="summary-status"><span class="sub">1 of 1 modules<\/span>/);
   assert.match(html, /<tr id="module-r0-0" class="module" style="--pass:0\.8333"><th scope="row" class="name">merchant-api<\/th>/);
   assert.match(html, /<td class="num">100<\/td><td class="num">80<\/td><td class="num bad">10<\/td><td class="num">4<\/td><td class="num">6<\/td>/);
 });
@@ -90,7 +90,7 @@ test('uses grey and no rate when every test is skipped', () => {
 
 test('uses grey for a repo and product where no module reported', () => {
   const html = render(dashboard(noDataModule, { ...noRate, modulesReporting: 0 }), 0.8);
-  assert.match(html, /<tr class="product no-rate"><th scope="row" class="name">Lockbox <span class="sub">0 of 1 modules<\/span>/);
+  assert.match(html, /<tr class="product no-rate"><th scope="row" class="name"><span class="summary-name">Lockbox<\/span> <span class="summary-status"><span class="sub">0 of 1 modules<\/span>/);
   assert.match(html, /<tr class="repo no-rate">/);
 });
 
@@ -166,7 +166,7 @@ test('shows a run-failed module as rose with its detail, date, age, and link', (
 
 test('turns a repo and product rose and badges the failed modules, even with a high pass rate', () => {
   const html = render(dashboard(okModule, { ...summary, modulesFailed: 2, modulesTotal: 3 }), 0.8);
-  assert.match(html, /<tr class="product run-failed" style="--pass:0\.8333"><th scope="row" class="name">Lockbox <span class="sub">1 of 3 modules<\/span> <span class="badge">2 modules failed<\/span>/);
+  assert.match(html, /<tr class="product run-failed" style="--pass:0\.8333"><th scope="row" class="name"><span class="summary-name">Lockbox<\/span> <span class="summary-status"><span class="sub">1 of 3 modules<\/span> <span class="badge">2 modules failed<\/span>/);
   assert.match(render(dashboard(okModule, { ...summary, modulesFailed: 1 }), 0.8), /1 module failed/);
 });
 
@@ -223,7 +223,7 @@ const twoRepos = (): Dashboard =>
 test('puts a fold checkbox with a label in each product and repo row, and none in module rows', () => {
   const html = render(twoRepos(), 0.8);
   assert.equal(html.match(/<input type="checkbox" class="fold"/g)?.length, 5);
-  assert.match(html, /<th scope="row" class="name">Lockbox <span class="sub">.*?<input type="checkbox" class="fold" id="fold-p0" role="switch" checked aria-label="Show repositories for Lockbox" aria-controls="group-r0 group-r1">Show repositories<\/label><\/th>/);
+  assert.match(html, /<th scope="row" class="name"><span class="summary-name">Lockbox<\/span> <span class="summary-status"><span class="sub">.*?<input type="checkbox" class="fold" id="fold-p0" role="switch" checked aria-label="Show repositories for Lockbox" aria-controls="group-r0 group-r1">Show repositories<\/label><\/th>/);
   assert.match(html, /<input type="checkbox" class="fold" id="fold-r1" role="switch" checked aria-label="Show modules for ui" aria-controls="module-r1-0 module-r1-1">Show modules<\/label><\/th>/);
   assert.match(html, /<input type="checkbox" class="fold" id="fold-r2" role="switch" checked aria-label="Show modules for misc" aria-controls="module-r2-0">Show modules<\/label><\/th>/);
   assert.doesNotMatch(html, /<tr id="module-r0-0" class="module[^>]*>[^\n]*<input/);

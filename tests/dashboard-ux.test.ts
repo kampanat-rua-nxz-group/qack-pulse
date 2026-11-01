@@ -107,5 +107,11 @@ test('groups repository reporting and failure status separately from its name', 
   const product = dashboard.products[0];
   const repo = { ...product.repos[0], modulesTotal: 2, modulesFailed: 1 };
   const html = render({ ...dashboard, products: [{ ...product, repos: [repo] }] }, 0.8);
-  assert.match(html, /Repo<\/span> <span class="repo-status"><span class="sub">1 of 2 modules<\/span> <span class="badge">1 module failed<\/span><\/span>/);
+  assert.match(html, /Repo<\/span> <span class="summary-status"><span class="sub">1 of 2 modules<\/span> <span class="badge">1 module failed<\/span><\/span>/);
+});
+
+test('groups product reporting and failure status separately from its name', () => {
+  const product = { ...dashboard.products[0], modulesTotal: 2, modulesFailed: 1 };
+  const html = render({ ...dashboard, products: [product] }, 0.8);
+  assert.match(html, /Product<\/span> <span class="summary-status"><span class="sub">1 of 2 modules<\/span> <span class="badge">1 module failed<\/span><\/span>/);
 });

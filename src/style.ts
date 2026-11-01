@@ -106,9 +106,9 @@ tr.product td, tr.product th.name { padding-top: 0.875rem; padding-bottom: 0.875
 tr.repo { --row-bg: var(--color-row-repo); }
 tr.repo td, tr.repo th.name { font-weight: 600; }
 tr.repo th.name { min-width: 18rem; padding: 0.5rem 0.875rem 0.5rem 2.875rem; }
-.repo-name { display: block; }
-.repo-status { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; }
-.repo-status .sub, .repo-status .badge { margin-left: 0; white-space: nowrap; }
+.summary-name { display: block; }
+.summary-status { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; }
+.summary-status .sub, .summary-status .badge { margin-left: 0; white-space: nowrap; }
 tr.module th.name { padding-left: 3.875rem; }
 tr.repo th.name, tr.module th.name { background-repeat: no-repeat; background-size: 1px 100%; }
 tr.repo th.name { background-image: linear-gradient(var(--color-guide), var(--color-guide)); background-position: 0.875rem 0; }
