@@ -28,6 +28,14 @@ const DETAILS: Record<RunFailedDetail, string> = {
   'stats-missing': 'the report has no stats',
 };
 
+const NEXT_STEPS: Record<NoDataReason, string> = {
+  'no-run': 'Check the workflow and branch for a finished run.',
+  'artifact-expired': 'Run the workflow again to create a new artifact.',
+  'artifact-missing': 'Check the workflow artifact and its configured prefix.',
+  'stats-missing': 'Check the report for Playwright stats.',
+  'fetch-failed': 'Check GitHub access and try again.',
+};
+
 export function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ESCAPES[char]);
 }
@@ -56,7 +64,7 @@ const DASH = '\u2014';
 const ageText = (iso: string | null, now: string): string => {
   if (iso === null || Number.isNaN(Date.parse(iso))) return '';
   const days = Math.floor((Date.parse(now) - Date.parse(iso)) / 86_400_000);
-  return days <= 0 ? 'today' : `${days}d ago`;
+  return `${Math.max(0, days)}d old at generation`;
 };
 
 const lastRun = (iso: string | null, stale: boolean, now: string): string => {
@@ -73,16 +81,15 @@ const runLink = (url: string | null, name: string): string => {
   return href === null ? '' : `<a href="${escapeHtml(href)}" aria-label="Run for ${escapeHtml(name)}">run</a>`;
 };
 
-// With a trend the cell points at the module's card on the history page, which carries the run link.
-// Without one there is no history page, so the cell keeps the plain run link.
 const historyCell = (url: string | null, id: string | null, name: string): string =>
-  `<td class="history">${id === null ? runLink(url, name) : `<a href="history.html#${id}" aria-label="History for ${escapeHtml(name)}">history</a>`}</td>`;
+  `<td class="history">${[runLink(url, name), id === null ? '' : `<a href="history.html#${id}" aria-label="History for ${escapeHtml(name)}">history</a>`].filter(Boolean).join(' ')}</td>`;
 
 // The row carries only the pass rate. CSS turns it into the health color.
 // A failed run overrides the scale because its counts are unknown.
-const rowOpen = (kind: string, passRate: number | null, failed = false): string => {
+const rowOpen = (kind: string, passRate: number | null, failed = false, id = ''): string => {
   const state = failed ? ' run-failed' : passRate === null ? ' no-rate' : '';
-  return passRate === null ? `<tr class="${kind}${state}">` : `<tr class="${kind}${state}" style="--pass:${Number(passRate.toFixed(4))}">`;
+  const rowId = id ? ` id="${id}"` : '';
+  return passRate === null ? `<tr${rowId} class="${kind}${state}">` : `<tr${rowId} class="${kind}${state}" style="--pass:${Number(passRate.toFixed(4))}">`;
 };
 
 const healthCells = (passRate: number | null): string =>
@@ -95,24 +102,24 @@ const countCells = (counts: Counts): string =>
 
 const dashCells = Array(5).fill(`<td class="num">${DASH}</td>`).join('');
 
-const fold = (id: string, name: string): string => `<input type="checkbox" class="fold" id="fold-${id}" aria-label="Collapse or expand ${escapeHtml(name)}">`;
+const fold = (id: string, name: string, controls: string[]): string => `<input type="checkbox" class="fold" id="fold-${id}" checked aria-label="Show ${id.startsWith('p') ? 'repositories' : 'modules'} for ${escapeHtml(name)}"${controls.length ? ` aria-controls="${controls.join(' ')}"` : ''}>`;
 
-const summaryRow = (kind: string, name: string, summary: Summary, id: string): string => {
+const summaryRow = (kind: string, name: string, summary: Summary, id: string, controls: string[]): string => {
   const failed = summary.modulesFailed > 0 ? ` <span class="badge">${summary.modulesFailed} ${summary.modulesFailed === 1 ? 'module' : 'modules'} failed</span>` : '';
   const counts = summary.modulesReporting === 0 ? dashCells : countCells(summary.counts);
   const rate = summary.modulesReporting === 0 ? null : summary.passRate;
-  return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<td class="name">${escapeHtml(name)} <span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}${fold(id, name)}</td>${healthCells(rate)}${counts}<td></td><td></td><td></td></tr>`;
+  return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<th scope="row" class="name">${escapeHtml(name)} <span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}${fold(id, name, controls)}</th>${healthCells(rate)}${counts}<td></td><td></td><td></td></tr>`;
 };
 
-function moduleRow(mod: ModuleRow, now: string, historyId: string | null): string {
-  const name = `<td class="name">${escapeHtml(mod.name)}`;
+function moduleRow(mod: ModuleRow, now: string, historyId: string | null, id: string): string {
+  const name = `<th scope="row" class="name">${escapeHtml(mod.name)}`;
   if (mod.status === 'no-data') {
-    return `${rowOpen('module no-data', null)}${name}</td>${healthCells(null)}<td colspan="5" class="reason">No data: ${REASONS[mod.reason]}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
+    return `${rowOpen('module no-data', null, false, id)}${name}</th>${healthCells(null)}<td colspan="5" class="reason">No data: ${REASONS[mod.reason]}. ${NEXT_STEPS[mod.reason]}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
   }
   if (mod.status === 'run-failed') {
-    return `${rowOpen('module', null, true)}${name}</td>${healthCells(null)}<td colspan="5" class="failed-text">Run failed, no results <span class="sub">(${DETAILS[mod.reason]})</span></td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
+    return `${rowOpen('module', null, true, id)}${name}</th>${healthCells(null)}<td colspan="5" class="failed-text">Run failed, no results <span class="sub">(${DETAILS[mod.reason]}). ${NEXT_STEPS[mod.reason]}</span></td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
   }
-  return `${rowOpen('module', mod.passRate)}${name}</td>${healthCells(mod.passRate)}${countCells(mod.counts)}<td class="num">${formatDuration(mod.durationMs)}</td><td>${lastRun(mod.startTime, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
+  return `${rowOpen('module', mod.passRate, false, id)}${name}</th>${healthCells(mod.passRate)}${countCells(mod.counts)}<td class="num">${formatDuration(mod.durationMs)}</td><td>${lastRun(mod.startTime, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
 }
 
 type CounterKind = keyof typeof ICONS;
@@ -143,24 +150,25 @@ const counters = (products: Dashboard['products']): string => {
   return `<p class="coverage">${reporting} of ${modules} modules reporting</p><ul class="counters">${items.join('')}</ul>`;
 };
 
-// Collapsing is CSS only. A checked box hides its group through :has(), so the page needs no script.
+// Collapsing is CSS only. An unchecked box hides its group through :has().
 // A product box hides its repo groups. A repo box hides its module rows.
 const foldRules = (products: Dashboard['products'], firstRepo: number[]): string =>
   products
     .flatMap((product, p) => [
-      `main:has(#fold-p${p}:checked) tbody.in-p${p} { display: none; }`,
-      ...product.repos.map((_, r) => `main:has(#fold-r${firstRepo[p] + r}:checked) tbody.in-r${firstRepo[p] + r} tr.module { display: none; }`),
+      `main:has(#fold-p${p}:not(:checked)) tbody.in-p${p} { display: none; }`,
+      ...product.repos.map((_, r) => `main:has(#fold-r${firstRepo[p] + r}:not(:checked)) tbody.in-r${firstRepo[p] + r} tr.module { display: none; }`),
     ])
     .join('\n');
 
 export function render(dashboard: Dashboard, roseAtPassRate: number, trend: DashboardTrend | null = null): string {
   const firstRepo = dashboard.products.map((_, p) => dashboard.products.slice(0, p).reduce((total, product) => total + product.repos.length, 0));
   const groups = dashboard.products.flatMap((product, p) => [
-    `<tbody class="head">\n${summaryRow('product', product.name, product, `p${p}`)}\n</tbody>`,
+    `<tbody class="head">\n${summaryRow('product', product.name, product, `p${p}`, product.repos.map((_, r) => `group-r${firstRepo[p] + r}`))}\n</tbody>`,
     ...product.repos.map((repo, r) => {
       const id = `r${firstRepo[p] + r}`;
-      const modules = repo.modules.map((mod, m) => moduleRow(mod, dashboard.generatedAt, trend === null ? null : historyId(p, r, m)));
-      return `<tbody class="in-p${p} in-${id}">\n${[summaryRow('repo', repo.name, repo, id), ...modules].join('\n')}\n</tbody>`;
+      const moduleIds = repo.modules.map((_, m) => `module-${id}-${m}`);
+      const modules = repo.modules.map((mod, m) => moduleRow(mod, dashboard.generatedAt, trend === null ? null : historyId(p, r, m), moduleIds[m]));
+      return `<tbody id="group-${id}" class="in-p${p} in-${id}">\n${[summaryRow('repo', repo.name, repo, id, moduleIds), ...modules].join('\n')}\n</tbody>`;
     }),
   ]);
   const trendNote = trend === null ? '' : ` Cards above the table plot the pass rate per day over the last ${trend.days} days. The History column links each module to its trend on the history page.`;
@@ -182,14 +190,14 @@ ${LOGO}
 <p class="lede">Latest test automation results. Counts roll up from module to repo to product.</p>
 </div>
 </div>
-<p class="generated">Generated ${formatDate(dashboard.generatedAt)} UTC+7</p>
+<p class="generated">Generated ${formatDate(dashboard.generatedAt)} UTC+7<br>Ages and stale status are as of generation.</p>
 </header>
 ${counters(dashboard.products)}
 ${trend === null ? '' : trendCards(dashboard, trend, roseAtPassRate)}
 <p class="scroll-hint" id="table-scroll-hint">Scroll horizontally to see all columns.</p>
 <div class="card" role="region" aria-label="Test results" aria-describedby="table-scroll-hint" tabindex="0">
 <table style="--rose-at:${roseAtPassRate}">
-<thead><tr><th class="name">Name</th><th>Health</th><th class="num">Total</th><th class="num">Passed</th><th class="num">Failed</th><th class="num">Skipped</th><th class="num">Flaky</th><th class="num">Duration</th><th>Last run (UTC+7)</th><th>${trend === null ? 'Run' : 'History'}</th></tr></thead>
+<thead><tr><th class="name">Name</th><th>Health</th><th class="num">Total</th><th class="num">Passed</th><th class="num">Failed</th><th class="num">Skipped</th><th class="num">Flaky</th><th class="num">Duration</th><th>Last run (UTC+7)</th><th>${trend === null ? 'Run' : 'Run / History'}</th></tr></thead>
 ${groups.join('\n')}
 </table>
 </div>

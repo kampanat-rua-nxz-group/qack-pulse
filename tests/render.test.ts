@@ -50,7 +50,7 @@ test('distinguishes unavailable and partial counter totals from complete results
 test('provides contextual link and fold names', () => {
   const html = render(dashboard({ ...okModule, name: 'A" & B' }), 0.8);
   assert.match(html, /aria-label="Run for A&quot; &amp; B"/);
-  assert.match(html, /aria-label="Collapse or expand Lockbox"/);
+  assert.match(html, /aria-label="Show repositories for Lockbox"/);
 });
 
 test('escapes the five HTML characters', () => {
@@ -59,9 +59,9 @@ test('escapes the five HTML characters', () => {
 
 test('shows a row for the product, the repo, and the module with its counts', () => {
   const html = render(dashboard(), 0.8);
-  assert.match(html, /<tr class="product" style="--pass:0\.8333"><td class="name">Lockbox <span class="sub">1 of 1 modules<\/span>/);
-  assert.match(html, /<tr class="repo" style="--pass:0\.8333"><td class="name">lockbox-api-automation <span class="sub">1 of 1 modules<\/span>/);
-  assert.match(html, /<tr class="module" style="--pass:0\.8333"><td class="name">merchant-api<\/td>/);
+  assert.match(html, /<tr class="product" style="--pass:0\.8333"><th scope="row" class="name">Lockbox <span class="sub">1 of 1 modules<\/span>/);
+  assert.match(html, /<tr class="repo" style="--pass:0\.8333"><th scope="row" class="name">lockbox-api-automation <span class="sub">1 of 1 modules<\/span>/);
+  assert.match(html, /<tr id="module-r0-0" class="module" style="--pass:0\.8333"><th scope="row" class="name">merchant-api<\/th>/);
   assert.match(html, /<td class="num">100<\/td><td class="num">80<\/td><td class="num bad">10<\/td><td class="num">4<\/td><td class="num">6<\/td>/);
 });
 
@@ -76,8 +76,8 @@ test('mixes the health color from teal at 100 percent to rose at roseAtPassRate'
   assert.match(html, /--tealShare: clamp\(0, \(var\(--pass\) - var\(--rose-at\)\) \/ \(1 - var\(--rose-at\)\), 1\);/);
   assert.match(html, /--health: color-mix\(in oklch, var\(--color-brand-primary\) calc\(var\(--tealShare\) \* 100%\), var\(--color-form-error\)\);/);
   assert.match(html, /<table style="--rose-at:0\.8">/);
-  assert.match(render(dashboard({ ...okModule, passRate: 1 }), 0.8), /<tr class="module" style="--pass:1">/);
-  assert.match(render(dashboard({ ...okModule, passRate: 0.8 }), 0.8), /<tr class="module" style="--pass:0\.8">/);
+  assert.match(render(dashboard({ ...okModule, passRate: 1 }), 0.8), /<tr id="module-r0-0" class="module" style="--pass:1">/);
+  assert.match(render(dashboard({ ...okModule, passRate: 0.8 }), 0.8), /<tr id="module-r0-0" class="module" style="--pass:0\.8">/);
   assert.match(render(dashboard(), 0.5), /<table style="--rose-at:0\.5">/);
 });
 
@@ -85,22 +85,22 @@ test('uses grey and no rate when every test is skipped', () => {
   const html = render(dashboard({ ...okModule, passRate: null, unhealthyRate: null }), 0.8);
   assert.match(html, /--color-health-none: #918a8f;/);
   assert.match(html, /tr\.no-rate \{ --health: var\(--color-health-none\); \}/);
-  assert.match(html, /<tr class="module no-rate"><td class="name">merchant-api<\/td><td class="health"><span class="swatch"><\/span>\u2014<\/td>/);
+  assert.match(html, /<tr id="module-r0-0" class="module no-rate"><th scope="row" class="name">merchant-api<\/th><td class="health"><span class="swatch"><\/span>\u2014<\/td>/);
 });
 
 test('uses grey for a repo and product where no module reported', () => {
   const html = render(dashboard(noDataModule, { ...noRate, modulesReporting: 0 }), 0.8);
-  assert.match(html, /<tr class="product no-rate"><td class="name">Lockbox <span class="sub">0 of 1 modules<\/span>/);
+  assert.match(html, /<tr class="product no-rate"><th scope="row" class="name">Lockbox <span class="sub">0 of 1 modules<\/span>/);
   assert.match(html, /<tr class="repo no-rate">/);
 });
 
 test('shows the run duration on module rows only', () => {
   const html = render(dashboard(), 0.8);
-  assert.match(html, /<td class="num">3m 04s<\/td><td>2026-10-12 10:35 <span class="sub">today<\/span><\/td>/);
+  assert.match(html, /<td class="num">3m 04s<\/td><td>2026-10-12 10:35 <span class="sub">0d old at generation<\/span><\/td>/);
   assert.equal(html.match(/3m 04s/g)?.length, 1);
   assert.match(render(dashboard({ ...okModule, durationMs: 45400 }), 0.8), /<td class="num">45s<\/td>/);
   assert.match(render(dashboard({ ...okModule, durationMs: 3_725_000 }), 0.8), /<td class="num">1h 02m<\/td>/);
-  assert.match(render(dashboard({ ...okModule, durationMs: null }), 0.8), /<td class="num"><\/td><td>2026-10-12 10:35 <span class="sub">today<\/span><\/td>/);
+  assert.match(render(dashboard({ ...okModule, durationMs: null }), 0.8), /<td class="num"><\/td><td>2026-10-12 10:35 <span class="sub">0d old at generation<\/span><\/td>/);
 });
 
 test('shows the generation time, the last run time, and a link to the run', () => {
@@ -111,19 +111,19 @@ test('shows the generation time, the last run time, and a link to the run', () =
 
 test('flags a stale module', () => {
   assert.doesNotMatch(render(dashboard(), 0.8), /<span class="badge">/);
-  assert.match(render(dashboard({ ...okModule, stale: true }), 0.8), /2026-10-12 10:35 <span class="sub">today<\/span> <span class="badge">stale<\/span><\/td>/);
+  assert.match(render(dashboard({ ...okModule, stale: true }), 0.8), /2026-10-12 10:35 <span class="sub">0d old at generation<\/span> <span class="badge">stale<\/span><\/td>/);
 });
 
 test('shows why a module has no data, with the date and link of its last run', () => {
   const html = render(dashboard(noDataModule), 0.8);
-  assert.match(html, /<tr class="module no-data no-rate"><td class="name">backoffice-ui<\/td><td class="health"><span class="swatch"><\/span>\u2014<\/td><td colspan="5" class="reason">No data: the artifact has expired<\/td>/);
-  assert.match(html, /2025-10-02 12:56 <span class="sub">374d ago<\/span> <span class="badge">stale<\/span>/);
+  assert.match(html, /<tr id="module-r0-0" class="module no-data no-rate"><th scope="row" class="name">backoffice-ui<\/th><td class="health"><span class="swatch"><\/span>\u2014<\/td><td colspan="5" class="reason">No data: the artifact has expired. Run the workflow again to create a new artifact.<\/td>/);
+  assert.match(html, /2025-10-02 12:56 <span class="sub">374d old at generation<\/span> <span class="badge">stale<\/span>/);
   assert.match(html, /actions\/runs\/77" aria-label="Run for backoffice-ui">run<\/a>/);
 });
 
 test('shows a module without any run as no data with no date and no link', () => {
   const html = render(dashboard({ ...noDataModule, reason: 'no-run', runDate: null, stale: false, runUrl: null }), 0.8);
-  assert.match(html, /No data: no finished run on the branch<\/td><td><\/td><td><\/td><td class="history"><\/td><\/tr>/);
+  assert.match(html, /No data: no finished run on the branch. Check the workflow and branch for a finished run.<\/td><td><\/td><td><\/td><td class="history"><\/td><\/tr>/);
 });
 
 test('escapes names that come from the config', () => {
@@ -159,14 +159,14 @@ const runFailedModule = {
 test('shows a run-failed module as rose with its detail, date, age, and link', () => {
   const html = render(dashboard(runFailedModule), 0.8);
   assert.match(html, /tr\.run-failed \{ --health: var\(--color-form-error\); \}/);
-  assert.match(html, /<tr class="module run-failed"><td class="name">onboard-api<\/td>/);
-  assert.match(html, /Run failed, no results <span class="sub">\(the report has no stats\)<\/span><\/td>/);
-  assert.match(html, /2026-10-12 10:33 <span class="sub">today<\/span><\/td><td class="history"><a href=/);
+  assert.match(html, /<tr id="module-r0-0" class="module run-failed"><th scope="row" class="name">onboard-api<\/th>/);
+  assert.match(html, /Run failed, no results <span class="sub">\(the report has no stats\)\. Check the report for Playwright stats\.<\/span><\/td>/);
+  assert.match(html, /2026-10-12 10:33 <span class="sub">0d old at generation<\/span><\/td><td class="history"><a href=/);
 });
 
 test('turns a repo and product rose and badges the failed modules, even with a high pass rate', () => {
   const html = render(dashboard(okModule, { ...summary, modulesFailed: 2, modulesTotal: 3 }), 0.8);
-  assert.match(html, /<tr class="product run-failed" style="--pass:0\.8333"><td class="name">Lockbox <span class="sub">1 of 3 modules<\/span> <span class="badge">2 modules failed<\/span>/);
+  assert.match(html, /<tr class="product run-failed" style="--pass:0\.8333"><th scope="row" class="name">Lockbox <span class="sub">1 of 3 modules<\/span> <span class="badge">2 modules failed<\/span>/);
   assert.match(render(dashboard(okModule, { ...summary, modulesFailed: 1 }), 0.8), /1 module failed/);
 });
 
@@ -223,31 +223,31 @@ const twoRepos = (): Dashboard =>
 test('puts a fold checkbox with a label in each product and repo row, and none in module rows', () => {
   const html = render(twoRepos(), 0.8);
   assert.equal(html.match(/<input type="checkbox" class="fold"/g)?.length, 5);
-  assert.match(html, /<td class="name">Lockbox <span class="sub">.*?<input type="checkbox" class="fold" id="fold-p0" aria-label="Collapse or expand Lockbox"><\/td>/);
-  assert.match(html, /<input type="checkbox" class="fold" id="fold-r1" aria-label="Collapse or expand ui"><\/td>/);
-  assert.match(html, /<input type="checkbox" class="fold" id="fold-r2" aria-label="Collapse or expand misc"><\/td>/);
-  assert.doesNotMatch(html, /<tr class="module[^>]*>[^\n]*<input/);
+  assert.match(html, /<th scope="row" class="name">Lockbox <span class="sub">.*?<input type="checkbox" class="fold" id="fold-p0" checked aria-label="Show repositories for Lockbox" aria-controls="group-r0 group-r1"><\/th>/);
+  assert.match(html, /<input type="checkbox" class="fold" id="fold-r1" checked aria-label="Show modules for ui" aria-controls="module-r1-0 module-r1-1"><\/th>/);
+  assert.match(html, /<input type="checkbox" class="fold" id="fold-r2" checked aria-label="Show modules for misc" aria-controls="module-r2-0"><\/th>/);
+  assert.doesNotMatch(html, /<tr id="module-r0-0" class="module[^>]*>[^\n]*<input/);
 });
 
 test('groups each repo and its modules in one tbody tagged with its product and repo', () => {
   const html = render(twoRepos(), 0.8);
   assert.equal(html.match(/<tbody class="head">/g)?.length, 2);
-  assert.match(html, /<tbody class="in-p0 in-r0">\n<tr class="repo"/);
-  assert.match(html, /<tbody class="in-p0 in-r1">\n<tr class="repo"/);
-  assert.match(html, /<tbody class="in-p1 in-r2">\n<tr class="repo"/);
+  assert.match(html, /<tbody id="group-r0" class="in-p0 in-r0">\n<tr class="repo"/);
+  assert.match(html, /<tbody id="group-r1" class="in-p0 in-r1">\n<tr class="repo"/);
+  assert.match(html, /<tbody id="group-r2" class="in-p1 in-r2">\n<tr class="repo"/);
 });
 
-test('hides a repo\'s modules or a product\'s repos when the matching checkbox is checked', () => {
+test('hides a repo\'s modules or a product\'s repos when the matching checkbox is unchecked', () => {
   const html = render(twoRepos(), 0.8);
-  assert.match(html, /main:has\(#fold-r1:checked\) tbody\.in-r1 tr\.module \{ display: none; \}/);
-  assert.match(html, /main:has\(#fold-p1:checked\) tbody\.in-p1 \{ display: none; \}/);
+  assert.match(html, /main:has\(#fold-r1:not\(:checked\)\) tbody\.in-r1 tr\.module \{ display: none; \}/);
+  assert.match(html, /main:has\(#fold-p1:not\(:checked\)\) tbody\.in-p1 \{ display: none; \}/);
   assert.doesNotMatch(html, /fold-r3|fold-p2/);
 });
 
 test('escapes the name in the fold label', () => {
   const data = twoRepos();
   const html = render({ ...data, products: [{ ...data.products[0], name: 'A"><b>' }] }, 0.8);
-  assert.match(html, /aria-label="Collapse or expand A&quot;&gt;&lt;b&gt;"/);
+  assert.match(html, /aria-label="Show repositories for A&quot;&gt;&lt;b&gt;"/);
   assert.doesNotMatch(html, /<b>/);
 });
 
@@ -332,10 +332,10 @@ test('shows 0.0% on a zero counter and no share when there are no cases', () => 
 
 test('links each module row to its card on the history page when a trend is given', () => {
   const html = render(dashboard(), 0.8, trendFor(trendOf('worse', -0.021)));
-  assert.match(html, /<th>History<\/th>/);
+  assert.match(html, /<th>Run \/ History<\/th>/);
   assert.doesNotMatch(html, /<th>Run<\/th>/);
-  assert.match(html, /<td class="history"><a href="history\.html#m-0-0-0" aria-label="History for [^"]+">history<\/a><\/td><\/tr>/);
-  assert.doesNotMatch(html, />run<\/a>/);
+  assert.match(html, /<td class="history"><a href="https:\/\/github\.com\/[^"]+" aria-label="Run for [^"]+">run<\/a> <a href="history\.html#m-0-0-0" aria-label="History for [^"]+">history<\/a><\/td><\/tr>/);
+  assert.match(html, />run<\/a>/);
 });
 
 test('keeps the history column reachable when the table is wider than its card', () => {
@@ -354,12 +354,12 @@ test('offers an accessible scrollable results table with a narrow-screen hint', 
 test('allows long sticky row names to wrap on narrow screens', () => {
   const html = render(dashboard(), 0.8);
   assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?td\.name[^}]*max-width: 11rem/);
-  assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?td\.name:has\(> \.sub\) \{ white-space: normal; \}/);
+  assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?th\.name:has\(> \.sub\) \{ white-space: normal; \}/);
 });
 
 test('links no-data and run-failed modules to the history page too, and only module rows', () => {
-  assert.match(render(dashboard(noDataModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="history\.html#m-0-0-0" aria-label="History for [^"]+">history<\/a><\/td>/);
-  assert.match(render(dashboard(runFailedModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="history\.html#m-0-0-0" aria-label="History for [^"]+">history<\/a><\/td>/);
+  assert.match(render(dashboard(noDataModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="https:\/\/github\.com\/[^"]+" aria-label="Run for [^"]+">run<\/a> <a href="history\.html#m-0-0-0" aria-label="History for [^"]+">history<\/a><\/td>/);
+  assert.match(render(dashboard(runFailedModule), 0.8, trendFor(trendOf('flat', 0))), /<td class="history"><a href="https:\/\/github\.com\/[^"]+" aria-label="Run for [^"]+">run<\/a> <a href="history\.html#m-0-0-0" aria-label="History for [^"]+">history<\/a><\/td>/);
   assert.equal(render(dashboard(), 0.8, trendFor(trendOf('flat', 0))).match(/class="history"/g)?.length, 1);
 });
 
@@ -379,3 +379,12 @@ test('renders the pulse wave and checkmark hero logo and styled headline in the 
 });
 
 
+
+test('exposes row names as headers and the complete daily trend as text', () => {
+  const html = render(dashboard(), 0.8, trendFor(trendOf('flat', 0, [0.9, null, 0.8])));
+  assert.match(html, /<th scope="row" class="name">merchant-api<\/th>/);
+  assert.match(html, /<summary>Daily pass rates<\/summary>/);
+  assert.match(html, /2026-10-01: 90.0%/);
+  assert.match(html, /2026-10-02: No rate/);
+  assert.match(html, /2026-10-03: 80.0%/);
+});

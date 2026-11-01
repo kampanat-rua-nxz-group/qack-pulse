@@ -122,12 +122,10 @@ test('opens on the current month and shows one month at a time', () => {
   assert.match(css, /\.mon-2:checked ~ \.months \.month-2 \{ display: block; \}/);
 });
 
-test('links Previous and Next to the neighbouring months and disables them at the ends', () => {
+test('uses native month choices without mouse-only navigation controls', () => {
   const html = section(page([august, line()]), 'm-0-0-0');
-  const month = (name: string): string => html.match(new RegExp(`<div class="month month-\\d">\\n<div class="month-head">.*?<h3>${name}</h3>.*?</div>`, 's'))?.[0] ?? '';
-  assert.match(month('October 2026'), /<label class="nav" for="m-0-0-0-1">Previous<\/label><h3>October 2026<\/h3><span class="nav off">Next<\/span>/);
-  assert.match(month('September 2026'), /<label class="nav" for="m-0-0-0-2">Previous<\/label><h3>September 2026<\/h3><label class="nav" for="m-0-0-0-0">Next<\/label>/);
-  assert.match(month('August 2026'), /<span class="nav off">Previous<\/span><h3>August 2026<\/h3><label class="nav" for="m-0-0-0-1">Next<\/label>/);
+  assert.match(html, /<input type="radio" class="mon mon-1"/);
+  assert.doesNotMatch(html, /class="nav"/);
 });
 
 test('keeps the month choice of each job apart', () => {

@@ -23,6 +23,7 @@ const card = (name: string, rate: number | null, trend: Trend, overview = false)
 <h4>${escapeHtml(name)}</h4>
 <p class="hero"><span class="rate">${rateText(rate)}</span><span class="delta">${deltaText(trend)}</span></p>
 ${sparkline(trend.points, CARD)}
+<details class="trend-details"><summary>Daily pass rates</summary><ul>${trend.points.map((point) => `<li>${escapeHtml(point.date)}: ${point.passRate === null ? 'No rate' : rateText(point.passRate)}</li>`).join('')}</ul></details>
 </article>`;
 
 // One group per product: the product name (folded into the section title when there is only one product), an overview card with the rolled-up line, then one card per repo.
@@ -42,6 +43,7 @@ ${cards.join('\n')}
   });
   return `<section class="trends" style="--rose-at:${roseAtPassRate}">
 <h2>${single ? `${escapeHtml(trend.products[0]?.name ?? '')} pass rate` : 'Pass rate'}, last ${trend.days} days</h2>
+<p class="trend-explainer">Current rate is from this snapshot. Change compares the latest historical rate with the average of earlier days; flat means a change of at most 1 percentage point. On days without a new result, each module's most recent result is carried forward.</p>
 ${groups.join('\n')}
 </section>`;
 }

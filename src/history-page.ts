@@ -16,7 +16,7 @@ type Days = Map<string, RunTotal>;
 export const historyId = (product: number, repo: number, module: number): string => `m-${product}-${repo}-${module}`;
 
 // One job shows at a time. :target selects the job the table linked to, and the first job shows when none is selected.
-// One month of that job shows at a time. Each job has a hidden radio per month, and Previous and Next are labels for the neighbours.
+// One month of that job shows at a time, selected by native radio buttons.
 // A day takes the same teal-to-rose color as the table rows, from its pass rate.
 const historyStyle = (monthCount: number): string => `
 .picker { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1.5rem; }
@@ -36,7 +36,6 @@ main:not(:has(.job:target)) .job:first-of-type { display: block; }
 ${Array.from({ length: monthCount }, (_, k) => `.mon-${k}:checked ~ .months .month-${k} { display: block; }`).join('\n')}
 .month-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin: 0 0 0.75rem; }
 .month h3 { margin: 0; color: var(--color-text-heading); font-size: 0.875rem; font-weight: 700; }
-.nav { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.125rem 0.625rem; border: 1px solid var(--color-border-card); border-radius: var(--radius-pill); color: var(--color-text-primary); font-size: 0.75rem; cursor: pointer; user-select: none; }
 .nav:hover { border-color: var(--color-brand-border); }
 .nav.off { color: var(--color-text-muted); cursor: default; opacity: 0.4; }
 .nav.off:hover { border-color: var(--color-border-card); }
@@ -75,9 +74,7 @@ const dayCell = (date: string, day: number, run: RunTotal | undefined, today: st
   return `<li class="day ran${passRate === null ? ' no-rate' : ''}"${passRate === null ? '' : ` style="--pass:${Number(passRate.toFixed(4))}"`}>${inner}</li>`;
 };
 
-type MonthNav = { position: number; previous: string; next: string };
-
-function month(year: number, index: number, days: Days | undefined, today: string, { position, previous, next }: MonthNav): string {
+function month(year: number, index: number, days: Days | undefined, today: string, position: number): string {
   const name = new Date(Date.UTC(year, index, 1)).toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const lead = new Date(Date.UTC(year, index, 1)).getUTCDay();
   const length = new Date(Date.UTC(year, index + 1, 0)).getUTCDate();
@@ -93,7 +90,7 @@ function month(year: number, index: number, days: Days | undefined, today: strin
     return run === undefined ? '' : `<li>${runDescription(date, run)}</li>`;
   }).join('');
   const details = descriptions ? `<details class="run-details"><summary>Run details</summary><ul>${descriptions}</ul></details>` : '';
-  return `<div class="month month-${position}">\n<div class="month-head">${previous}<h3>${name}</h3>${next}</div>\n<p class="calendar-hint">Scroll horizontally to see the full calendar.</p><div class="calendar-scroll" role="region" aria-label="${name} calendar" tabindex="0"><ol class="cal">${[...head, ...pads, ...cells].join('')}</ol></div>${details}\n</div>`;
+  return `<div class="month month-${position}">\n<div class="month-head"><h3>${name}</h3></div>\n<p class="calendar-hint">Scroll horizontally to see the full calendar.</p><div class="calendar-scroll" role="region" aria-label="${name} calendar" tabindex="0"><ol class="cal">${[...head, ...pads, ...cells].join('')}</ol></div>${details}\n</div>`;
 }
 
 // How many months the page covers: from the oldest month with a run to the current month, at most MAX_MONTHS.
@@ -105,7 +102,7 @@ function monthCount(runs: Map<string, Days>, now: Date): number {
 }
 
 // One calendar section per workflow job (module). Each day shows the newest run that started on it.
-// Month 0 is the current month and shows first. Previous goes one month back, Next one month forward.
+// Month 0 is the current month and shows first.
 export function renderHistory(dashboard: Dashboard, history: HistoryLine[], now: Date, roseAtPassRate: number): string {
   const runs = newestRunPerDay(history);
   const today = now.toISOString().slice(0, 10);
@@ -118,9 +115,7 @@ export function renderHistory(dashboard: Dashboard, history: HistoryLine[], now:
         const days = runs.get(`${repo.name}|${mod.name}`);
         const radios = months.map((first, k) => `<input type="radio" class="mon mon-${k}" name="${id}-month" id="${id}-${k}"${k === 0 ? ' checked' : ''}><label class="month-choice" for="${id}-${k}">${first.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}</label>`);
         const grid = months.map((first, k) => {
-          const previous = k + 1 < count ? `<label class="nav" for="${id}-${k + 1}">Previous</label>` : '<span class="nav off">Previous</span>';
-          const next = k > 0 ? `<label class="nav" for="${id}-${k - 1}">Next</label>` : '<span class="nav off">Next</span>';
-          return month(first.getUTCFullYear(), first.getUTCMonth(), days, today, { position: k, previous, next });
+          return month(first.getUTCFullYear(), first.getUTCMonth(), days, today, k);
         });
         return {
           id,
