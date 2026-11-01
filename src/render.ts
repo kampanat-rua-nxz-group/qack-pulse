@@ -185,7 +185,6 @@ export function render(dashboard: Dashboard, roseAtPassRate: number, trend: Dash
       return `<tbody id="group-${id}" class="in-p${p} in-${id}">\n${[summaryRow('repo', repo.name, repo, id, moduleIds), ...modules].join('\n')}\n</tbody>`;
     }),
   ]);
-  const trendNote = trend === null ? '' : ` Cards above the table plot the pass rate per day over the last ${trend.days} days. The History column links each module to its trend on the history page.`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -201,7 +200,7 @@ export function render(dashboard: Dashboard, roseAtPassRate: number, trend: Dash
 ${LOGO}
 <div>
 <h1>QACK <span class="accent">PULSE</span></h1>
-<p class="lede">Latest test automation results. Counts roll up from module to repo to product.</p>
+<p class="lede">Latest test automation results.</p>
 </div>
 </div>
 <p class="generated">Generated ${formatDate(dashboard.generatedAt)} UTC+7<br>Ages and stale status are as of generation.</p>
@@ -209,7 +208,7 @@ ${LOGO}
 ${counters(dashboard.products)}
 ${attention(dashboard, trend)}
 ${trend === null ? '' : trendCards(dashboard, trend, roseAtPassRate)}
-<p class="health-explainer">Health is passed tests divided by executed tests (total minus skipped). The bar's tick marks ${Number((roseAtPassRate * 100).toFixed(1))}%; flaky tests count as not passed.</p>
+<p class="health-explainer">Health: passed / executed (excluding skipped). Flaky tests count as not passed. Bar tick: ${Number((roseAtPassRate * 100).toFixed(1))}%.</p>
 <p class="scroll-hint" id="table-scroll-hint">Scroll horizontally to see all columns.</p>
 <div class="card" role="region" aria-label="Test results" aria-describedby="table-scroll-hint" tabindex="0">
 <table style="--rose-at:${roseAtPassRate}">
@@ -217,7 +216,7 @@ ${trend === null ? '' : trendCards(dashboard, trend, roseAtPassRate)}
 ${groups.join('\n')}
 </table>
 </div>
-<p class="legend">Health is passed tests divided by executed tests (total minus skipped). The bar fades from teal at 100% to rose at ${Number((roseAtPassRate * 100).toFixed(1))}%. The tick marks that point. Flaky tests count as not passed. Counter percentages are shares of all cases.${trendNote}</p>
+<p class="legend">Counter percentages are shares of all cases.</p>
 </main>
 </body>
 </html>

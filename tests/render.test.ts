@@ -179,8 +179,8 @@ test('shows a dash, not zero, in every count and rate column when no module repo
 
 test('explains how health is calculated and where the rose threshold sits', () => {
   const html = render(dashboard(), 0.8);
-  assert.match(html, /<p class="legend">Health is passed tests divided by executed tests \(total minus skipped\)\. The bar fades from teal at 100% to rose at 80%\./);
-  assert.match(render(dashboard(), 0.855), /rose at 85\.5%\./);
+  assert.match(html, /Health: passed \/ executed \(excluding skipped\)\. Flaky tests count as not passed\. Bar tick: 80%\./);
+  assert.match(render(dashboard(), 0.855), /Bar tick: 85\.5%\./);
 });
 
 test('draws the health bar as a track, a fill, and a threshold tick, and respects reduced motion', () => {
@@ -294,11 +294,6 @@ test('shows an up delta, flat, and not enough history in plain words', () => {
   const empty = render(dashboard(), 0.8, trendFor(trendOf('unknown', null, [null, null])));
   assert.match(empty, /<span class="delta">not enough history<\/span>/);
   assert.doesNotMatch(empty, /<svg class="spark"/);
-});
-
-test('explains the trend in the legend only when a trend is given', () => {
-  assert.match(render(dashboard(), 0.8, trendFor(trendOf('flat', 0))), /plot the pass rate/);
-  assert.doesNotMatch(render(dashboard(), 0.8), /plot the pass rate/);
 });
 
 test('puts an overview card for the product first when it has more than one repo', () => {

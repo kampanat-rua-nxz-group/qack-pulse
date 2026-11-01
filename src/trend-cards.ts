@@ -43,7 +43,7 @@ ${cards.join('\n')}
   });
   return `<section class="trends" style="--rose-at:${roseAtPassRate}">
 <h2>${single ? `${escapeHtml(trend.products[0]?.name ?? '')} pass rate` : 'Pass rate'}, last ${trend.days} days</h2>
-<p class="trend-explainer">Current rate is from this snapshot. Change compares the latest historical rate with the average of earlier days; flat means a change of at most 1 percentage point. On days without a new result, each module's most recent result is carried forward.</p>
+<p class="trend-explainer">Current rate: this snapshot. Change: latest historical rate vs. average of earlier days (flat: within 1 percentage point). Days without a new result use each module's last result.</p>
 ${groups.join('\n')}
 </section>`;
 }

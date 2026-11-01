@@ -20,7 +20,7 @@ test('explains the current rate, historical comparison and carried-forward resul
   const html = render(dashboard, 0.8, history);
   assert.match(html, /Current rate/);
   assert.match(html, /average of earlier days/);
-  assert.match(html, /without a new result.*most recent result/i);
+  assert.match(html, /days without a new result.*last result/i);
   assert.ok(html.indexOf('average of earlier days') < html.indexOf('<table'));
 });
 
@@ -82,7 +82,7 @@ test('surfaces modules needing attention with direct actions and context', () =>
 test('explains health near the table and flags incomplete rollups beside the rate', () => {
   const partial = { ...dashboard, products: [{ ...dashboard.products[0], modulesTotal: 2 }] } as Dashboard;
   const html = render(partial, 0.8);
-  assert.ok(html.indexOf('Health is passed tests divided by executed tests') < html.indexOf('<table'));
+  assert.ok(html.indexOf('Health: passed / executed') < html.indexOf('<table'));
   assert.match(html, /class="health"[^>]*>.*Incomplete: 1 of 2 modules reporting/);
 });
 
