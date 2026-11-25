@@ -79,6 +79,14 @@ test('surfaces modules needing attention with direct actions and context', () =>
   assert.match(html, /aria-label="Run for API"/);
 });
 
+test('lets the needs-attention list collapse and starts it expanded', () => {
+  const failing = { ...module, counts: { ...counts, passed: 0, failed: 1 }, passRate: 0 };
+  const data = { ...dashboard, products: [{ ...dashboard.products[0], repos: [{ ...dashboard.products[0].repos[0], modules: [failing] }] }] } as Dashboard;
+  const html = render(data, 0.8);
+  assert.match(html, /<details class="attention" open><summary><h2>Needs attention <span>\(1\)<\/span><\/h2><\/summary><ul>/);
+  assert.match(html, /\.attention summary \{[^}]*cursor: pointer/);
+});
+
 test('explains health near the table and flags incomplete rollups beside the rate', () => {
   const partial = { ...dashboard, products: [{ ...dashboard.products[0], modulesTotal: 2 }] } as Dashboard;
   const html = render(partial, 0.8);
@@ -100,7 +108,7 @@ test('lists missing and failed runs without treating unknown counts as failures'
   const html = render(data, 0.8);
   assert.match(html, /Product \/ Repo \/ &lt;missing&gt;<\/strong> <span class="attention-reason">No data/);
   assert.match(html, /Failed run<\/strong> <span class="attention-reason">Run failed/);
-  assert.doesNotMatch(render(dashboard, 0.8), /<h2>Needs attention/);
+  assert.doesNotMatch(render(dashboard, 0.8), /Needs attention/);
 });
 
 test('groups repository reporting and failure status separately from its name', () => {

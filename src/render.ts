@@ -122,7 +122,7 @@ const attention = (dashboard: Dashboard, trend: DashboardTrend | null): string =
     const links = [runLink(mod.runUrl, mod.name), trend === null ? '' : `<a href="history.html#${historyId(p, r, m)}" aria-label="History for ${escapeHtml(mod.name)}">history</a>`].filter(Boolean).join(' ');
     return [`<li><span><strong>${path}</strong> <span class="attention-reason">${reasons.join(' · ')}</span></span><span class="attention-links">${links}</span></li>`];
   })));
-  return items.length ? `<section class="attention"><h2>Needs attention <span>(${items.length})</span></h2><ul>${items.join('')}</ul></section>` : '';
+  return items.length ? `<details class="attention" open><summary><h2>Needs attention <span>(${items.length})</span></h2></summary><ul>${items.join('')}</ul></details>` : '';
 };
 
 function moduleRow(mod: ModuleRow, now: string, historyId: string | null, id: string): string {

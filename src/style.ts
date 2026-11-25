@@ -118,7 +118,11 @@ tr.module th.name { background-image: linear-gradient(var(--color-guide), var(--
 .fold:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 3px; }
 .incomplete { display: block; max-width: 12rem; margin-top: 0.25rem; color: var(--color-warn); font-size: 0.75rem; line-height: 1rem; white-space: normal; }
 .attention { margin: 0 0 1.5rem; }
-.attention h2 { margin: 0 0 0.5rem; font-size: 1rem; }
+.attention summary { display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; cursor: pointer; list-style: none; }
+.attention summary::-webkit-details-marker { display: none; }
+.attention summary::before { content: "▸"; color: var(--color-text-muted); transition: transform 0.15s; }
+.attention[open] summary::before { transform: rotate(90deg); }
+.attention h2 { display: inline; margin: 0; font-size: 1rem; }
 .attention h2 span { color: var(--color-text-muted); font-weight: 400; }
 .attention ul { margin: 0; padding: 0; list-style: none; }
 .attention li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; padding: 0.625rem 0; border-bottom: 1px solid var(--color-border-subtle); overflow-wrap: anywhere; }
@@ -194,5 +198,6 @@ a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2p
 }
 @media (prefers-reduced-motion: reduce) {
   .swatch::after { animation: none; }
+  .attention summary::before { transition: none; }
 }
 `;
