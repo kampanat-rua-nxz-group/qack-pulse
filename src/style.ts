@@ -70,9 +70,19 @@ h1 .accent {
   -webkit-text-fill-color: transparent;
 }
 
-.lede { margin: 0.375rem 0 0; max-width: 36rem; color: var(--color-text-muted); }
 .generated { margin: 0; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
-.scroll-hint { margin: 0 0 0.5rem; color: var(--color-text-muted); }
+.scroll-hint { display: none; margin: 0 0 0.5rem; color: var(--color-text-muted); }
+.tip-host { position: relative; }
+.tip { display: inline-flex; margin-left: 0.375rem; vertical-align: middle; }
+.tip-button { position: relative; display: inline-grid; place-items: center; width: 1.125rem; height: 1.125rem; padding: 0; border: 1px solid var(--color-border-card); border-radius: 50%; background: var(--color-health-track); color: var(--color-text-muted); font: italic 600 0.6875rem/1 Georgia, serif; letter-spacing: 0; cursor: help; }
+.tip-button::before { content: ""; position: absolute; inset: -0.8125rem; }
+.tip-button:hover, .tip-button:focus-visible { border-color: var(--color-brand-border); color: var(--color-brand-secondary); }
+.tip-button:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+.tip-text { position: absolute; top: calc(100% + 0.25rem); left: 0; z-index: 10; width: max-content; max-width: min(20rem, calc(100vw - 2rem)); padding: 0.5rem 0.75rem; border: 1px solid var(--color-border-card); border-radius: 0.5rem; background: var(--color-row-product); box-shadow: 0 12px 24px -8px rgb(0 0 0 / 60%); color: var(--color-text-primary); font-size: 0.75rem; font-style: normal; font-weight: 400; line-height: 1.125rem; letter-spacing: 0; text-align: left; white-space: normal; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 0.12s; }
+.tip:hover .tip-text, .tip-button:focus + .tip-text { visibility: visible; opacity: 1; }
+.tip-end .tip-text { left: auto; right: 0; }
+th.tip-host .tip-text { width: 16rem; }
+td.tip-host .tip-text { top: auto; bottom: calc(100% + 0.25rem); }
 .card {
   overflow-x: auto;
   border: 1px solid var(--color-border-card);
@@ -129,7 +139,6 @@ tr.module th.name { background-image: linear-gradient(var(--color-guide), var(--
 .attention-reason { display: block; color: var(--color-warn); font-size: 0.75rem; }
 .attention-links { display: flex; gap: 1rem; align-items: center; }
 .attention-links a { display: inline-flex; align-items: center; min-height: 2.75rem; }
-.health-explainer { color: var(--color-text-muted); margin: 0 0 0.5rem; }
 .sub { margin-left: 0.5rem; color: var(--color-text-muted); font-size: 0.75rem; font-weight: 400; }
 .reason { color: var(--color-text-muted); }
 td:has(> .sub) { white-space: nowrap; }
@@ -159,13 +168,11 @@ a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2p
 .counter.skipped { --chip-bg: var(--status-skipped-bg); --chip-border: var(--status-skipped-border); --chip-text: var(--status-skipped-text); }
 .counter.zero { --chip-bg: transparent; --chip-border: var(--color-border-subtle); --chip-text: var(--color-text-muted); }
 .counter.zero .count { font-weight: 500; }
-.legend { margin: 1rem 0 0; color: var(--color-text-muted); font-size: 0.75rem; line-height: 1.125rem; }
 .spark { vertical-align: middle; }
 .spark path { fill: none; stroke: var(--health); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .spark circle { fill: var(--health); }
 .trends { margin: 0 0 1.5rem; }
 .trends h2 { margin: 0 0 0.75rem; color: var(--color-text-heading); font-size: 1rem; font-weight: 600; }
-.trend-explainer { margin: 0 0 0.75rem; color: var(--color-text-muted); }
 .trend-group { margin: 0 0 1.25rem; }
 .trend-group h3 { margin: 0 0 0.5rem; color: var(--color-text-heading); font-size: 0.875rem; font-weight: 700; }
 .trend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: 0.75rem; }
@@ -195,9 +202,12 @@ a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2p
   th.name:has(> .sub) { white-space: normal; }
   th.name, td.name { position: sticky; left: 0; z-index: 1; }
   th.name { z-index: 2; }
+  .scroll-hint { display: block; }
+  .tip-end .tip-text { left: 0; right: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .swatch::after { animation: none; }
+  .tip-text { transition: none; }
   .attention summary::before { transition: none; }
 }
 `;

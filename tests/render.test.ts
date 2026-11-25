@@ -96,11 +96,11 @@ test('uses grey for a repo and product where no module reported', () => {
 
 test('shows the run duration on module rows only', () => {
   const html = render(dashboard(), 0.8);
-  assert.match(html, /<td class="num">3m 04s<\/td><td>2026-10-12 10:35 <span class="sub">0d old at generation<\/span><\/td>/);
+  assert.match(html, /<td class="num">3m 04s<\/td><td>2026-10-12 10:35 <span class="sub">0d old<\/span><\/td>/);
   assert.equal(html.match(/3m 04s/g)?.length, 1);
   assert.match(render(dashboard({ ...okModule, durationMs: 45400 }), 0.8), /<td class="num">45s<\/td>/);
   assert.match(render(dashboard({ ...okModule, durationMs: 3_725_000 }), 0.8), /<td class="num">1h 02m<\/td>/);
-  assert.match(render(dashboard({ ...okModule, durationMs: null }), 0.8), /<td class="num"><\/td><td>2026-10-12 10:35 <span class="sub">0d old at generation<\/span><\/td>/);
+  assert.match(render(dashboard({ ...okModule, durationMs: null }), 0.8), /<td class="num"><\/td><td>2026-10-12 10:35 <span class="sub">0d old<\/span><\/td>/);
 });
 
 test('shows the generation time, the last run time, and a link to the run', () => {
@@ -111,19 +111,19 @@ test('shows the generation time, the last run time, and a link to the run', () =
 
 test('flags a stale module', () => {
   assert.doesNotMatch(render(dashboard(), 0.8), /<span class="badge">/);
-  assert.match(render(dashboard({ ...okModule, stale: true }), 0.8), /2026-10-12 10:35 <span class="sub">0d old at generation<\/span> <span class="badge">stale<\/span><\/td>/);
+  assert.match(render(dashboard({ ...okModule, stale: true }), 0.8), /2026-10-12 10:35 <span class="sub">0d old<\/span> <span class="badge">stale<\/span><\/td>/);
 });
 
 test('shows why a module has no data, with the date and link of its last run', () => {
   const html = render(dashboard(noDataModule), 0.8);
-  assert.match(html, /<tr id="module-r0-0" class="module no-data no-rate"><th scope="row" class="name">backoffice-ui<\/th><td class="health"><span class="swatch"><\/span>\u2014<\/td><td colspan="5" class="reason">No data: the artifact has expired. Run the workflow again to create a new artifact.<\/td>/);
-  assert.match(html, /2025-10-02 12:56 <span class="sub">374d old at generation<\/span> <span class="badge">stale<\/span>/);
+  assert.match(html, /<tr id="module-r0-0" class="module no-data no-rate"><th scope="row" class="name">backoffice-ui<\/th><td class="health"><span class="swatch"><\/span>\u2014<\/td><td colspan="5" class="reason tip-host">No data: the artifact has expired<span class="tip">.*?>Run the workflow again to create a new artifact\.<\/span><\/span><\/td>/);
+  assert.match(html, /2025-10-02 12:56 <span class="sub">374d old<\/span> <span class="badge">stale<\/span>/);
   assert.match(html, /actions\/runs\/77" aria-label="Run for backoffice-ui">run<\/a>/);
 });
 
 test('shows a module without any run as no data with no date and no link', () => {
   const html = render(dashboard({ ...noDataModule, reason: 'no-run', runDate: null, stale: false, runUrl: null }), 0.8);
-  assert.match(html, /No data: no finished run on the branch. Check the workflow and branch for a finished run.<\/td><td><\/td><td><\/td><td class="history"><\/td><\/tr>/);
+  assert.match(html, /<td colspan="5" class="reason tip-host">No data: no finished run on the branch<span class="tip">.*?aria-label="Next step for backoffice-ui".*?>Check the workflow and branch for a finished run\.<\/span><\/span><\/td><td><\/td><td><\/td><td class="history"><\/td><\/tr>/);
 });
 
 test('escapes names that come from the config', () => {
@@ -160,8 +160,8 @@ test('shows a run-failed module as rose with its detail, date, age, and link', (
   const html = render(dashboard(runFailedModule), 0.8);
   assert.match(html, /tr\.run-failed \{ --health: var\(--color-form-error\); \}/);
   assert.match(html, /<tr id="module-r0-0" class="module run-failed"><th scope="row" class="name">onboard-api<\/th>/);
-  assert.match(html, /Run failed, no results <span class="sub">\(the report has no stats\)\. Check the report for Playwright stats\.<\/span><\/td>/);
-  assert.match(html, /2026-10-12 10:33 <span class="sub">0d old at generation<\/span><\/td><td class="history"><a href=/);
+  assert.match(html, /<td colspan="5" class="failed-text tip-host">Run failed <span class="sub">\(the report has no stats\)<\/span><span class="tip">.*?aria-label="Next step for onboard-api".*?>Check the report for Playwright stats\.<\/span><\/span><\/td>/);
+  assert.match(html, /2026-10-12 10:33 <span class="sub">0d old<\/span><\/td><td class="history"><a href=/);
 });
 
 test('turns a repo and product rose and badges the failed modules, even with a high pass rate', () => {
@@ -177,9 +177,9 @@ test('shows a dash, not zero, in every count and rate column when no module repo
   assert.doesNotMatch(html, /<tr class="repo[^>]*>.*?<td class="num">0<\/td>/);
 });
 
-test('explains how health is calculated and where the rose threshold sits', () => {
+test('explains how health is calculated in a tooltip on the Health column', () => {
   const html = render(dashboard(), 0.8);
-  assert.match(html, /Health: passed \/ executed \(excluding skipped\)\. Flaky tests count as not passed\. Bar tick: 80%\./);
+  assert.match(html, /<th class="tip-host">Health<span class="tip">.*?aria-label="About health".*?role="tooltip" id="tip-health">Passed \/ executed \(excluding skipped\)\. Flaky tests count as not passed\. Bar tick: 80%\./);
   assert.match(render(dashboard(), 0.855), /Bar tick: 85\.5%\./);
 });
 
@@ -275,7 +275,7 @@ test('shows a card per repo above the table, under a heading for its product', (
   const html = render(dashboard(), 0.8, trendFor(trendOf('worse', -0.021)));
   assert.equal((html.match(/<article class="trend-card worse"/g) ?? []).length, 1);
   assert.equal((html.match(/<svg class="spark"/g) ?? []).length, 1);
-  assert.match(html, /<h2>Lockbox pass rate, last 14 days<\/h2>/);
+  assert.match(html, /<h2 class="tip-host">Lockbox pass rate, last 14 days<span class="tip">/);
   assert.doesNotMatch(html, /<h3>/);
   assert.doesNotMatch(html, /Lockbox overview/);
   assert.match(html, /<h4>lockbox-api-automation<\/h4>/);
@@ -285,7 +285,7 @@ test('shows a card per repo above the table, under a heading for its product', (
 test('escapes names in the trend cards', () => {
   const trend = trendFor(trendOf('flat', 0));
   const html = render(dashboard(), 0.8, { ...trend, products: [{ ...trend.products[0], name: '<b>' }] });
-  assert.match(html, /<h2>&lt;b&gt; pass rate, last/);
+  assert.match(html, /<h2 class="tip-host">&lt;b&gt; pass rate, last/);
 });
 
 test('shows an up delta, flat, and not enough history in plain words', () => {
@@ -339,9 +339,11 @@ test('keeps the history column reachable when the table is wider than its card',
   assert.match(html, /td\.history\s*\{[^}]*white-space:\s*nowrap/s);
 });
 
-test('offers an accessible scrollable results table with a narrow-screen hint', () => {
+test('offers an accessible scrollable results table with a hint shown only on narrow screens', () => {
   const html = render(dashboard(), 0.8);
   assert.match(html, /id="table-scroll-hint"[^>]*>Scroll horizontally to see all columns/);
+  assert.match(html, /\.scroll-hint \{[^}]*display: none/);
+  assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?\.scroll-hint \{ display: block; \}/);
   assert.match(html, /class="card" role="region" aria-label="Test results" aria-describedby="table-scroll-hint" tabindex="0"/);
   assert.match(html, /@media \(max-width: 40rem\)[\s\S]*?td\.name[^}]*position: sticky/);
 });

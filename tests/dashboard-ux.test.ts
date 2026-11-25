@@ -11,13 +11,16 @@ const dashboard = { schemaVersion: 1, generatedAt: '2026-10-12T04:00:00Z', produ
 const trend = { points: [], delta: null, direction: 'unknown' } as const;
 const history = { days: 14, products: [{ name: 'Product', trend, repos: [{ name: 'Repo', trend, modules: [{ name: 'API', trend }] }] }] } as DashboardTrend;
 
-test('labels relative dates and stale status as of the generated snapshot', () => {
+test('keeps the header short and explains generation time in a tooltip', () => {
   const html = render(dashboard, 0.8);
-  assert.match(html, /Ages and stale status are as of generation/);
+  assert.doesNotMatch(html, /class="lede"/);
+  assert.match(html, /<p class="generated tip-host tip-end">Generated 2026-10-12 11:00 UTC\+7<span class="tip">.*?id="tip-generated">Ages and stale status are as of generation\./);
 });
 
-test('explains the current rate, historical comparison and carried-forward results near the trend cards', () => {
+test('explains the current rate, historical comparison and carried-forward results in a tooltip on the trend heading', () => {
   const html = render(dashboard, 0.8, history);
+  assert.doesNotMatch(html, /class="trend-explainer"/);
+  assert.match(html, /<h2 class="tip-host">Product pass rate, last 14 days<span class="tip">.*?id="tip-trend">Current rate/);
   assert.match(html, /Current rate/);
   assert.match(html, /average of earlier days/);
   assert.match(html, /days without a new result.*last result/i);
@@ -87,11 +90,10 @@ test('lets the needs-attention list collapse and starts it expanded', () => {
   assert.match(html, /\.attention summary \{[^}]*cursor: pointer/);
 });
 
-test('explains health near the table and flags incomplete rollups beside the rate', () => {
+test('flags incomplete rollups beside the rate', () => {
   const partial = { ...dashboard, products: [{ ...dashboard.products[0], modulesTotal: 2 }] } as Dashboard;
   const html = render(partial, 0.8);
-  assert.ok(html.indexOf('Health: passed / executed') < html.indexOf('<table'));
-  assert.match(html, /class="health"[^>]*>.*Incomplete: 1 of 2 modules reporting/);
+  assert.match(html, /class="health"[^>]*>.*<span class="incomplete">Incomplete<\/span>/);
 });
 
 test('makes hierarchy controls visibly labelled and limits sticky width on narrow screens', () => {
@@ -122,4 +124,16 @@ test('groups product reporting and failure status separately from its name', () 
   const product = { ...dashboard.products[0], modulesTotal: 2, modulesFailed: 1 };
   const html = render({ ...dashboard, products: [product] }, 0.8);
   assert.match(html, /Product<\/span> <span class="summary-status"><span class="sub">1 of 2 modules<\/span> <span class="badge">1 module failed<\/span><\/span>/);
+});
+
+test('explains counter percentages in a tooltip on the reporting line instead of a footer', () => {
+  const html = render(dashboard, 0.8);
+  assert.match(html, /<p class="coverage tip-host">1 of 1 modules reporting<span class="tip">.*?id="tip-counters">Counter percentages are shares of all cases\./);
+  assert.doesNotMatch(html, /class="legend"/);
+});
+
+test('shows tooltips on hover and keyboard focus with a 44px touch target', () => {
+  const html = render(dashboard, 0.8);
+  assert.match(html, /\.tip:hover \.tip-text, \.tip-button:focus \+ \.tip-text \{[^}]*visibility: visible/);
+  assert.match(html, /\.tip-button::before \{[^}]*inset: -0\.8125rem/);
 });

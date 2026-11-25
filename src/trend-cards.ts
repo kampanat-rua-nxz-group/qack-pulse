@@ -1,6 +1,7 @@
 import { escapeHtml } from './render.ts';
 import type { Dashboard } from './rollup.ts';
 import { sparkline } from './spark.ts';
+import { tip } from './tip.ts';
 import type { DashboardTrend, Trend } from './trend.ts';
 
 const CARD = { width: 260, height: 64 };
@@ -42,8 +43,7 @@ ${cards.join('\n')}
 </div>`;
   });
   return `<section class="trends" style="--rose-at:${roseAtPassRate}">
-<h2>${single ? `${escapeHtml(trend.products[0]?.name ?? '')} pass rate` : 'Pass rate'}, last ${trend.days} days</h2>
-<p class="trend-explainer">Current rate: this snapshot. Change: latest historical rate vs. average of earlier days (flat: within 1 percentage point). Days without a new result use each module's last result.</p>
+<h2 class="tip-host">${single ? `${escapeHtml(trend.products[0]?.name ?? '')} pass rate` : 'Pass rate'}, last ${trend.days} days${tip('tip-trend', 'About pass rate trends', "Current rate: this snapshot. Change: latest historical rate vs. average of earlier days (flat: within 1 percentage point). Days without a new result use each module's last result.")}</h2>
 ${groups.join('\n')}
 </section>`;
 }
