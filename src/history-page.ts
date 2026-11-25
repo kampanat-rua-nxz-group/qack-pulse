@@ -3,6 +3,7 @@ import type { HistoryLine } from './history.ts';
 import { escapeHtml, safeUrl } from './render.ts';
 import type { Dashboard } from './rollup.ts';
 import { STYLE } from './style.ts';
+import { tip } from './tip.ts';
 import { newestRunPerDay } from './trend.ts';
 import type { RunTotal } from './trend.ts';
 
@@ -138,8 +139,7 @@ export function renderHistory(dashboard: Dashboard, history: HistoryLine[], now:
 <main>
 <header>
 <div>
-<h1>History</h1>
-<p class="lede">Pass rate per day for each workflow job. Pick a job and a month.</p>
+<h1 class="tip-host">History${tip('tip-legend', 'About the calendar', `Each day shows the newest run that started on it, in UTC. The color fades from teal at 100% to rose at ${Number((roseAtPassRate * 100).toFixed(1))}% pass rate. Grey is a run where every test was skipped. An empty day had no run. Click a day to open its run.`)}</h1>
 </div>
 <p class="generated"><a href="dashboard.html">Back to dashboard</a></p>
 </header>
@@ -147,7 +147,6 @@ export function renderHistory(dashboard: Dashboard, history: HistoryLine[], now:
 <div class="jobs" style="--rose-at:${roseAtPassRate}">
 ${jobs.map((job) => job.html).join('\n')}
 </div>
-<p class="legend">Each day shows the newest run that started on it, in UTC. The color fades from teal at 100% to rose at ${Number((roseAtPassRate * 100).toFixed(1))}% pass rate. Grey is a run where every test was skipped. An empty day had no run. Click a day to open its run.</p>
 </main>
 </body>
 </html>

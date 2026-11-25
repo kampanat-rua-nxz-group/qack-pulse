@@ -193,8 +193,9 @@ test('links back to the dashboard', () => {
   assert.match(page(), /<a href="dashboard\.html">Back to dashboard<\/a>/);
 });
 
-test('explains the colors and that days are UTC', () => {
-  assert.match(page(), /Each day shows the newest run that started on it, in UTC\./);
+test('explains the colors and that days are UTC in a tooltip by the title', () => {
+  assert.match(page(), /<h1 class="tip-host">History<span class="tip">.*?id="tip-legend">Each day shows the newest run that started on it, in UTC\./);
+  assert.doesNotMatch(page(), /class="(lede|legend)"/);
 });
 
 test('escapes names that come from the config', () => {

@@ -4,6 +4,7 @@ import { historyId } from './history-page.ts';
 import { ICONS, LOGO } from './icons.ts';
 import type { Counts } from './stats.ts';
 import { STYLE } from './style.ts';
+import { tip } from './tip.ts';
 import type { DashboardTrend } from './trend.ts';
 import { trendCards } from './trend-cards.ts';
 
@@ -64,7 +65,7 @@ const DASH = '\u2014';
 const ageText = (iso: string | null, now: string): string => {
   if (iso === null || Number.isNaN(Date.parse(iso))) return '';
   const days = Math.floor((Date.parse(now) - Date.parse(iso)) / 86_400_000);
-  return `${Math.max(0, days)}d old at generation`;
+  return `${Math.max(0, days)}d old`;
 };
 
 const lastRun = (iso: string | null, stale: boolean, now: string): string => {
@@ -108,7 +109,7 @@ const summaryRow = (kind: string, name: string, summary: Summary, id: string, co
   const failed = summary.modulesFailed > 0 ? ` <span class="badge">${summary.modulesFailed} ${summary.modulesFailed === 1 ? 'module' : 'modules'} failed</span>` : '';
   const counts = summary.modulesReporting === 0 ? dashCells : countCells(summary.counts);
   const rate = summary.modulesReporting === 0 ? null : summary.passRate;
-  const coverage = summary.modulesReporting < summary.modulesTotal ? `<span class="incomplete">Incomplete: ${summary.modulesReporting} of ${summary.modulesTotal} modules reporting</span>` : '';
+  const coverage = summary.modulesReporting < summary.modulesTotal ? `<span class="incomplete">Incomplete</span>` : '';
   const details = `<span class="sub">${summary.modulesReporting} of ${summary.modulesTotal} modules</span>${failed}`;
   const label = `<span class="summary-name">${escapeHtml(name)}</span> <span class="summary-status">${details}</span>`;
   return `${rowOpen(kind, rate, summary.modulesFailed > 0)}<th scope="row" class="name">${label}${fold(id, name, controls)}</th>${healthCells(rate).replace('</td>', `${coverage}</td>`)}${counts}<td></td><td></td><td></td></tr>`;
@@ -122,16 +123,18 @@ const attention = (dashboard: Dashboard, trend: DashboardTrend | null): string =
     const links = [runLink(mod.runUrl, mod.name), trend === null ? '' : `<a href="history.html#${historyId(p, r, m)}" aria-label="History for ${escapeHtml(mod.name)}">history</a>`].filter(Boolean).join(' ');
     return [`<li><span><strong>${path}</strong> <span class="attention-reason">${reasons.join(' · ')}</span></span><span class="attention-links">${links}</span></li>`];
   })));
-  return items.length ? `<section class="attention"><h2>Needs attention <span>(${items.length})</span></h2><ul>${items.join('')}</ul></section>` : '';
+  return items.length ? `<details class="attention" open><summary><h2>Needs attention <span>(${items.length})</span></h2></summary><ul>${items.join('')}</ul></details>` : '';
 };
+
+const nextStep = (rowId: string, name: string, text: string): string => tip(`tip-${rowId}`, `Next step for ${name}`, text);
 
 function moduleRow(mod: ModuleRow, now: string, historyId: string | null, id: string): string {
   const name = `<th scope="row" class="name">${escapeHtml(mod.name)}`;
   if (mod.status === 'no-data') {
-    return `${rowOpen('module no-data', null, false, id)}${name}</th>${healthCells(null)}<td colspan="5" class="reason">No data: ${REASONS[mod.reason]}. ${NEXT_STEPS[mod.reason]}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
+    return `${rowOpen('module no-data', null, false, id)}${name}</th>${healthCells(null)}<td colspan="5" class="reason tip-host">No data: ${REASONS[mod.reason]}${nextStep(id, mod.name, NEXT_STEPS[mod.reason])}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
   }
   if (mod.status === 'run-failed') {
-    return `${rowOpen('module', null, true, id)}${name}</th>${healthCells(null)}<td colspan="5" class="failed-text">Run failed, no results <span class="sub">(${DETAILS[mod.reason]}). ${NEXT_STEPS[mod.reason]}</span></td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
+    return `${rowOpen('module', null, true, id)}${name}</th>${healthCells(null)}<td colspan="5" class="failed-text tip-host">Run failed <span class="sub">(${DETAILS[mod.reason]})</span>${nextStep(id, mod.name, NEXT_STEPS[mod.reason])}</td><td></td><td>${lastRun(mod.runDate, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
   }
   return `${rowOpen('module', mod.passRate, false, id)}${name}</th>${healthCells(mod.passRate)}${countCells(mod.counts)}<td class="num">${formatDuration(mod.durationMs)}</td><td>${lastRun(mod.startTime, mod.stale, now)}</td>${historyCell(mod.runUrl, historyId, mod.name)}</tr>`;
 }
@@ -161,7 +164,7 @@ const counters = (products: Dashboard['products']): string => {
     const share = total === 0 || reporting === 0 ? '' : `<span class="pct">${percent(values[kind] / total)}</span>`;
     return `<li class="counter ${kind}${zero ? ' zero' : ''}">${icon}<span class="count">${reporting === 0 ? DASH : values[kind]}</span><span class="label">${COUNTER_LABELS[kind]}</span>${share}</li>`;
   });
-  return `<p class="coverage">${reporting} of ${modules} modules reporting</p><ul class="counters">${items.join('')}</ul>`;
+  return `<p class="coverage tip-host">${reporting} of ${modules} modules reporting${tip('tip-counters', 'About counter percentages', 'Counter percentages are shares of all cases.')}</p><ul class="counters">${items.join('')}</ul>`;
 };
 
 // Collapsing is CSS only. An unchecked box hides its group through :has().
@@ -200,23 +203,20 @@ export function render(dashboard: Dashboard, roseAtPassRate: number, trend: Dash
 ${LOGO}
 <div>
 <h1>QACK <span class="accent">PULSE</span></h1>
-<p class="lede">Latest test automation results.</p>
 </div>
 </div>
-<p class="generated">Generated ${formatDate(dashboard.generatedAt)} UTC+7<br>Ages and stale status are as of generation.</p>
+<p class="generated tip-host tip-end">Generated ${formatDate(dashboard.generatedAt)} UTC+7${tip('tip-generated', 'About generation time', 'Ages and stale status are as of generation.')}</p>
 </header>
 ${counters(dashboard.products)}
 ${attention(dashboard, trend)}
 ${trend === null ? '' : trendCards(dashboard, trend, roseAtPassRate)}
-<p class="health-explainer">Health: passed / executed (excluding skipped). Flaky tests count as not passed. Bar tick: ${Number((roseAtPassRate * 100).toFixed(1))}%.</p>
 <p class="scroll-hint" id="table-scroll-hint">Scroll horizontally to see all columns.</p>
 <div class="card" role="region" aria-label="Test results" aria-describedby="table-scroll-hint" tabindex="0">
 <table style="--rose-at:${roseAtPassRate}">
-<thead><tr><th class="name">Name</th><th>Health</th><th class="num">Total</th><th class="num">Passed</th><th class="num">Failed</th><th class="num">Skipped</th><th class="num">Flaky</th><th class="num">Duration</th><th>Last run (UTC+7)</th><th>${trend === null ? 'Run' : 'Run / History'}</th></tr></thead>
+<thead><tr><th class="name">Name</th><th class="tip-host">Health${tip('tip-health', 'About health', `Passed / executed (excluding skipped). Flaky tests count as not passed. Bar tick: ${Number((roseAtPassRate * 100).toFixed(1))}%.`)}</th><th class="num">Total</th><th class="num">Passed</th><th class="num">Failed</th><th class="num">Skipped</th><th class="num">Flaky</th><th class="num">Duration</th><th>Last run (UTC+7)</th><th>${trend === null ? 'Run' : 'Run / History'}</th></tr></thead>
 ${groups.join('\n')}
 </table>
 </div>
-<p class="legend">Counter percentages are shares of all cases.</p>
 </main>
 </body>
 </html>
